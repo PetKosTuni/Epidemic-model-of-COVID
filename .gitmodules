@@ -1,0 +1,3 @@
+[submodule "COMP.SE.620-covid-data"]
+        path = code/data
+        url = https://github.com/sampozki/COMP.SE.620-covid-data
