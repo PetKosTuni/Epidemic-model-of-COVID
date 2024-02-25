@@ -34,6 +34,25 @@ No need to install venv again. Just run following snippet:
 
 ```$ source .venv/bin/activate```
 
+## Submodules
+
+This repository uses git submodules feature. There is a submodule with all test data: https://github.com/sampozki/COMP.SE.620-covid-data
+
+### First install
+
+Run following commands to initialize git submodules
+```git submodule init```
+
+```git submodules update```
+
+### Update submodule commit hash
+
+```git submodule update --recursive --remote```
+
+For more information about submodules: https://git-scm.com/book/en/v2/Git-Tools-Submodules
+
+## Code usage
+
 ### How to get forecast results of confirmed cases, deaths at different levels?
 
 Step 1: Run ```validation.py``` to generate validation file for selecting hyperparameters, e.g., end date should be after 2021-01-01
