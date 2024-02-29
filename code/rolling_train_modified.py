@@ -2,17 +2,9 @@ import numpy as np
 from scipy.optimize import minimize
 from model import Learner_SuEIR, Learner_SuEIR_H
 from data import NYTimes, Hospital_US, JHU_global
+from util import ensure_float64
 
 
-
-def ensure_float64(arr):
-    """! Convert array to dtype float64, if it is not already
-    @param arr Array of numbers
-    @return array of numbers as float64
-    """
-    if arr.dtype != np.float64:
-        return arr.astype(np.float64)
-    return arr
 
 def loss(pred, target, smoothing=10):
     target = ensure_float64(target)

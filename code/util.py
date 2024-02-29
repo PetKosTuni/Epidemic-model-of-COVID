@@ -13,6 +13,15 @@ import os
 os.environ['DC_STATEHOOD'] = '1'
 import us
 
+def ensure_float64(arr):
+    """! Convert array to dtype float64, if it is not already
+    @param arr Array of numbers
+    @return array of numbers as float64
+    """
+    if arr.dtype != np.float64:
+        return arr.astype(np.float64)
+    return arr
+
 def func(x, a, b, bias):   
     return a*np.minimum(np.exp(-b*(x+bias)), 1)
 def func_root(x, a, b, bias):   
