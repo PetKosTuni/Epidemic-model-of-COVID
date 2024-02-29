@@ -7,7 +7,7 @@ from data import NYTimes, Hospital_US, JHU_global
 
 def ensure_float64(arr):
     """! Convert array to dtype float64, if it is not already
-    @param array of numbers
+    @param arr Array of numbers
     @return array of numbers as float64
     """
     if arr.dtype != np.float64:
