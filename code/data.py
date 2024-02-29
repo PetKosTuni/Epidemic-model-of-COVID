@@ -134,23 +134,16 @@ class JHU_global(Data):
         return start, end
 
     # Get the data of the country from dates within the given period
-    # Possible fix for crashing here is in the commented code
     def get(self, start_date, end_date, country):
-        date = pd.to_datetime(self.confirm_table.index)
-        #countryconfirm = self.confirm_table[country].iloc[1:] # remove Province/State' 
-        #countrydeath = self.death_table[country].iloc[1:]
-        #countryrecover = self.recover_table[country].iloc[1:]
-        #date = pd.to_datetime(self.confirm_table.index[1:])
+        countryconfirm = self.confirm_table[country].iloc[1:] # remove Province/State' 
+        countrydeath = self.death_table[country].iloc[1:]
+        countryrecover = self.recover_table[country].iloc[1:]
+        date = pd.to_datetime(self.confirm_table.index[1:])
         start = datetime.datetime.strptime(start_date, '%Y-%m-%d')
         end = datetime.datetime.strptime(end_date, '%Y-%m-%d')
-        #confirm = countryconfirm.loc[(date >= start) & (date <= end)]
-        #death = countrydeath.loc[(date >= start) & (date <= end)]
-        #recover = countryrecover.loc[(date >= start) & (date <= end)]
-        confirm = self.confirm_table[country].loc[(
-            date >= start) & (date <= end)]
-        death = self.death_table[country].loc[(date >= start) & (date <= end)]
-        recover = self.recover_table[country].loc[(
-            date >= start) & (date <= end)]
+        confirm = countryconfirm.loc[(date >= start) & (date <= end)]
+        death = countrydeath.loc[(date >= start) & (date <= end)]
+        recover = countryrecover.loc[(date >= start) & (date <= end)]
         return confirm.to_numpy(), death.to_numpy(), recover.to_numpy()
 
 

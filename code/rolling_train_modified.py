@@ -5,7 +5,14 @@ from data import NYTimes, Hospital_US, JHU_global
 
 
 
-def loss(pred, target, smoothing=10): 
+def ensure_float64(arr):
+    if arr.dtype != np.float64:
+        return arr.astype(np.float64)
+    return arr
+
+def loss(pred, target, smoothing=10):
+    target = ensure_float64(target)
+    pred = ensure_float64(pred)
     return np.mean((np.log(pred+smoothing) - np.log(target+smoothing))**2)
 
 def train(model, init, prev_params, train_data, reg=0, lag=0):
