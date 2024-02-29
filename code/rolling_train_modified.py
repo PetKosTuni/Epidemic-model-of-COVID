@@ -6,6 +6,10 @@ from data import NYTimes, Hospital_US, JHU_global
 
 
 def ensure_float64(arr):
+    """! Convert array to dtype float64, if it is not already
+    @param array of numbers
+    @return array of numbers as float64
+    """
     if arr.dtype != np.float64:
         return arr.astype(np.float64)
     return arr
