@@ -14,7 +14,6 @@ from rolling_train_modified import *
 from util import *
 from matplotlib import pyplot as plt
 
-#
 parser = argparse.ArgumentParser(description='validation of prediction performance for all states')
 parser.add_argument('--END_DATE', default = "default",
                     help='end date for training models')
@@ -36,7 +35,8 @@ args = parser.parse_args()
 
 print(args)
 
-#
+# Here are some hard coded values for the model to work properly.
+
 START_nation = {"Brazil": "2020-03-30", "Canada": "2020-03-28", "Mexico": "2020-03-30", \
  "India": "2020-03-28", "Turkey": "2020-03-22", "Russia": "2020-04-01", "Saudi Arabia": "2020-03-28", "US": "2020-03-22", \
  "United Arab Emirates": "2020-04-10", "Qatar": "2020-04-06", "France": "2020-03-20", "Spain": "2020-03-15", \
@@ -68,7 +68,6 @@ mid_dates_state = {"Alabama": "2020-06-03", "Arizona": "2020-05-28", "Arkansas":
 }
 mid_dates_state_resurge = {"Colorado": "2020-09-10", "California": "2020-09-30", "Florida": "2020-09-20", "Illinois": "2020-09-10", "New York": "2020-09-10", "Texas": "2020-09-15"
 }
-
 
 mid_dates_county = {"San Joaquin": "2020-05-26", "Contra Costa": "2020-06-02", "Alameda": "2020-06-03", "Kern": "2020-05-20", \
  "Tulare": "2020-05-30", "Sacramento": "2020-06-02", "Fresno": "2020-06-07", "San Bernardino": "2020-05-25", \
@@ -107,9 +106,9 @@ def validation_loss(model, init, params_all, train_data, val_data, new_sus, pop_
 
 def get_county_list(cc_limit=200, pop_limit=50000):
     """! The function creates a list of counties from the wanted dataset.
-    @param cc_limit The limit for confirmed cases for a county.
-    @param pop_limit A population limit in a county.
-    @return A python list containing a list of wanted counties.
+    @param cc_limit The lower limit for confirmed cases for a county.
+    @param pop_limit A lower limit for population in a county.
+    @return A python list containing a list of valid counties.
     """
     
     non_county_list = ["Puerto Rico", "American Samoa", "Guam", "Northern Mariana Islands", "Virgin Islands", "Diamond Princess", "Grand Princess"]
