@@ -14,6 +14,7 @@ from rolling_train_modified import *
 from util import *
 from matplotlib import pyplot as plt
 
+#
 parser = argparse.ArgumentParser(description='validation of prediction performance for all states')
 parser.add_argument('--END_DATE', default = "default",
                     help='end date for training models')
@@ -34,6 +35,8 @@ parser.add_argument('--popin', type=float, default = 0,
 args = parser.parse_args()
 
 print(args)
+
+#
 START_nation = {"Brazil": "2020-03-30", "Canada": "2020-03-28", "Mexico": "2020-03-30", \
  "India": "2020-03-28", "Turkey": "2020-03-22", "Russia": "2020-04-01", "Saudi Arabia": "2020-03-28", "US": "2020-03-22", \
  "United Arab Emirates": "2020-04-10", "Qatar": "2020-04-06", "France": "2020-03-20", "Spain": "2020-03-15", \
@@ -79,9 +82,19 @@ mid_dates_nation = {"US": "2020-06-15", "Mexico": "2020-07-05", "India": "2020-0
 north_cal = ["Santa Clara", "San Mateo", "Alameda", "Contra Costa", "Sacramento", "San Joaquin", "Fresno"]
 
 # severe_state = ["Florida"]  
-    
 
-def validation(model, init, params_all, train_data, val_data,  new_sus, pop_in):
+def validation_loss(model, init, params_all, train_data, val_data, new_sus, pop_in):
+    """! The function calculates validation loss of the model with the given parameters.
+    @param model The SuEIR epidemic model.
+    @param init A python list containing initialization parameters.
+    @param params_all Parameters gained by training the model.
+    @param train_data Training data used to calculate predicted output.
+    @param val_data Validation data used to calculate validation loss by comparing it to the prediction data.
+    @param new_sus Amount of new suspectible individuals.
+    @param pop_in Float value used to calculate the amount of population joining the suspecitible population.
+    @return Float value representing the validation loss of the model.
+    """
+
     val_data_confirm, val_data_fatality = val_data[0], val_data[1]
     val_size = len(val_data_confirm)
 
@@ -93,6 +106,12 @@ def validation(model, init, params_all, train_data, val_data,  new_sus, pop_in):
     return  0.5*loss(pred_confirm, val_data_confirm, smoothing=0.1) + loss(pred_fatality, val_data_fatality, smoothing=0.1)
 
 def get_county_list(cc_limit=200, pop_limit=50000):
+    """! The function creates a list of counties from the wanted dataset.
+    @param cc_limit The limit for confirmed cases for a county.
+    @param pop_limit A population limit in a county.
+    @return A python list containing a list of wanted counties.
+    """
+    
     non_county_list = ["Puerto Rico", "American Samoa", "Guam", "Northern Mariana Islands", "Virgin Islands", "Diamond Princess", "Grand Princess"]
     data = NYTimes(level='counties') if args.dataset == "NYtimes" else JHU_US(level='counties')
     with open("data/county_pop.json", 'r') as f:
@@ -110,10 +129,9 @@ def get_county_list(cc_limit=200, pop_limit=50000):
 
     return county_list
 
-
-
+# The main functionality of the file happens here. At the end validation parameters, such as validation loss, for each region
+# (or state, depends on chosen level parameters) is saved to two files, which are then used to generate predictions in the generate_predictions.py -file.
 if __name__ == '__main__':
-    
     
     # initial the dataloader, get region list 
     # get the directory of output validation files
@@ -352,16 +370,16 @@ if __name__ == '__main__':
 
                 # At the initialization we assume that there is not recovered cases.
                 init = [N-E_0-data_confirm[0]-data_fatality[0], E_0, data_confirm[0], data_fatality[0]]
+                print(init)
                 # train the model using the candidate N and E_0, then compute the validation loss
                 params_all, loss_all = rolling_train(model, init, train_data, new_sus, pop_in=pop_in)
-                val_loss = validation(model, init, params_all, train_data, val_data, new_sus, pop_in=pop_in)
+                val_loss = validation_loss(model, init, params_all, train_data, val_data, new_sus, pop_in=pop_in)
 
                 for params in params_all:
                     beta, gamma, sigma, mu = params
                     # we cannot allow mu>sigma otherwise the model is not valid
                     if mu>sigma:
                         val_loss = 1e6
-
 
                 # using the model to forecast the fatality and confirmed cases in the next 100 days, 
                 # output max_daily, last confirm and last fatality for validation
@@ -407,7 +425,3 @@ if __name__ == '__main__':
     write_file_name_best = write_dir + "val_params_best_" + "END_DATE_" + args.END_DATE + "_VAL_END_DATE_" + args.VAL_END_DATE
 
     write_val_to_json(params_allregion, write_file_name_all, write_file_name_best)
-
-
-            
-        
