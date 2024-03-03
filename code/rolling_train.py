@@ -2,14 +2,29 @@ import numpy as np
 from scipy.optimize import minimize
 from model import Learner_SuEIR, Learner_SuEIR_H
 from data import NYTimes, Hospital_US, JHU_global
-
-
+from matplotlib import pyplot as plt
 
 def loss(pred, target, smoothing=10):
+    """!
+    @param pred 
+    @param target
+    @param smoothing
+    @return
+    """
+
     # print (pred)
     return np.mean((np.log(pred+smoothing) - np.log(target+smoothing))**2)
 
 def train(model, init, prev_params, train_data, reg=0, lag=0):
+    """!
+    @param model 
+    @param init
+    @param prev_params
+    @param train_data 
+    @param reg
+    @param lag
+    @return
+    """
 
     data_confirm, data_fatality = train_data[0], train_data[1]
     if len(train_data)==3:
@@ -23,6 +38,10 @@ def train(model, init, prev_params, train_data, reg=0, lag=0):
         confirm_perday[np.maximum(0, len(confirm_perday)-7):])
 
     def loss_train(params):
+        """!
+        @param params
+        @return
+        """
 
         _, _, _, pred_remove, pred_confirm, pred_fatality = model(size, params, init, lag)
 
@@ -64,6 +83,14 @@ def train(model, init, prev_params, train_data, reg=0, lag=0):
 
 
 def rolling_train(model, init, train_data, new_sus, pop_in=1/500):
+    """!
+    @param model
+    @param init
+    @param train_data 
+    @param new_sus
+    @param pop_in
+    @return
+    """
 
     lag = 0
     params_all = []
@@ -106,6 +133,18 @@ def rolling_train(model, init, train_data, new_sus, pop_in=1/500):
     return params_all, loss_all 
 
 def rolling_prediction(model, init, params_all, train_data, new_sus, pred_range, pop_in=1/500, daily_smooth=False):
+    """!
+    @param model 
+    @param init
+    @param params_all
+    @param train_data 
+    @param new_sus
+    @param pred_range
+    @param pop_in
+    @param daily_smooth
+    @return
+    """
+
     lag = 0
     model.reset()
     
@@ -189,6 +228,16 @@ def rolling_prediction(model, init, params_all, train_data, new_sus, pred_range,
     return pred_confirm, pred_fatality, pred_act
 
 def rolling_likelihood(model, init, params_all, train_data, new_sus, pop_in):
+    """!
+    @param model 
+    @param init
+    @param params_all
+    @param train_data 
+    @param new_sus
+    @param pop_in
+    @return
+    """
+
     lag = 0
     model.reset()
     loss_all = []
@@ -219,11 +268,7 @@ def rolling_likelihood(model, init, params_all, train_data, new_sus, pop_in):
     model.reset()
     return loss_all
 
-
-
-
 if __name__ == '__main__':
-
 
     N = 60000000
     E = N/50

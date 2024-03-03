@@ -2,13 +2,29 @@ import numpy as np
 from scipy.optimize import minimize
 from model import Learner_SuEIR, Learner_SuEIR_H
 from data import NYTimes, Hospital_US, JHU_global
-
-
+from matplotlib import pyplot as plt
 
 def loss(pred, target, smoothing=10): 
+    """!
+    @param pred 
+    @param target
+    @param smoothing
+    @return
+    """
+
     return np.mean((np.log(pred+smoothing) - np.log(target+smoothing))**2)
 
 def train(model, init, prev_params, train_data, reg=0, lag=0):
+    """!
+    @param model 
+    @param init
+    @param prev_params
+    @param train_data 
+    @param reg
+    @param lag
+    @return
+    """
+
     # prev_params is not used, this is for the usage of defining regularization loss
 
     data_confirm, data_fatality = train_data[0], train_data[1]
@@ -50,6 +66,14 @@ def train(model, init, prev_params, train_data, reg=0, lag=0):
 
 
 def rolling_train(model, init, train_data, new_sus, pop_in=1/500):
+    """!
+    @param model
+    @param init
+    @param train_data 
+    @param new_sus
+    @param pop_in
+    @return
+    """
 
     # train multiple models in a rolling manner, the susceptible and exposed populations will be transfered to the next period as initialization
 
@@ -102,6 +126,18 @@ def rolling_train(model, init, train_data, new_sus, pop_in=1/500):
     return params_all, loss_all 
 
 def rolling_prediction(model, init, params_all, train_data, new_sus, pred_range, pop_in=1/500, daily_smooth=False):
+    """!
+    @param model 
+    @param init
+    @param params_all
+    @param train_data 
+    @param new_sus
+    @param pred_range
+    @param pop_in
+    @param daily_smooth
+    @return
+    """
+
     lag = 0
     model.reset()
     ind = 0
@@ -125,8 +161,6 @@ def rolling_prediction(model, init, params_all, train_data, new_sus, pred_range,
         else:
             # model.pop_in = pop_in
             model.bias = 50
-
-        
         
     model.bias = 60-len(data_confirm)
     if len(train_data)==3:
@@ -150,8 +184,6 @@ def rolling_prediction(model, init, params_all, train_data, new_sus, pred_range,
 
     smoothing = 1. if daily_smooth else 0
 
-
-
     temp_C_perday = np.diff(pred_confirm.copy())
     slope_temp_C_perday = np.diff(temp_C_perday)
     modified_slope_gap_confirm = (slope_confirm_perday - slope_temp_C_perday[0])*smoothing
@@ -165,8 +197,6 @@ def rolling_prediction(model, init, params_all, train_data, new_sus, pred_range,
     temp_C =  [pred_confirm[0] + np.sum(temp_C_perday[0:i])  for i in range(len(temp_C_perday)+1)]
     pred_confirm = np.array(temp_C)
 
-
-
     temp_F_perday = np.diff(pred_fatality.copy())
     slope_temp_F_perday = np.diff(temp_F_perday)
     smoothing_slope = 0 if np.max(fatality_perday[-7:])>4*np.median(fatality_perday[-7:]) or np.median(fatality_perday[-7:])<0 else 1
@@ -175,7 +205,6 @@ def rolling_prediction(model, init, params_all, train_data, new_sus, pred_range,
     modified_slope_gap_fatality = np.maximum(np.minimum(modified_slope_gap_fatality, ave_fatality_perday/10), -ave_fatality_perday/20)
     slope_temp_F_perday = [slope_temp_F_perday[i] + modified_slope_gap_fatality * np.exp(-0.05*i**2) for i in range(len(slope_temp_F_perday))]
     temp_F_perday = [np.maximum(0, temp_F_perday[0] + np.sum(slope_temp_F_perday[0:i])) for i in range(len(slope_temp_F_perday)+1)]
-
 
     modifying_gap_fatality = (ave_fatality_perday - temp_F_perday[0])*smoothing_slope
     temp_F_perday  = [np.maximum(0, temp_F_perday[i] + modifying_gap_fatality * np.exp(-0.05*i)) for i in range(len(temp_F_perday))]
@@ -186,6 +215,15 @@ def rolling_prediction(model, init, params_all, train_data, new_sus, pred_range,
     return pred_confirm, pred_fatality, pred_act
 
 def rolling_likelihood(model, init, params_all, train_data, new_sus, pop_in):
+    """!
+    @param model 
+    @param init
+    @param params_all
+    @param train_data 
+    @param new_sus
+    @param pop_in
+    @return
+    """
 
     # calculating the likelihood for determine the confidence interval
 
@@ -211,8 +249,6 @@ def rolling_likelihood(model, init, params_all, train_data, new_sus, pop_in):
             true_remove = np.minimum(data_confirm[-1], np.maximum(_train_data[1][-1] + _train_data[2][-1], pred_remove[-1]))
         else:
             true_remove = np.minimum(data_confirm[-1], pred_remove[-1])
-
-
             
         lag += len(data_confirm)-10
         init = [pred_sus[-1], pred_exp[-1], data_confirm[-1]-true_remove, true_remove]
@@ -229,12 +265,7 @@ def rolling_likelihood(model, init, params_all, train_data, new_sus, pop_in):
     model.reset()
     return loss_all[0], loss_all[-1]
 
-
-
-
 if __name__ == '__main__':
-
-
     N = 60000000
     E = N/50
 
@@ -251,7 +282,6 @@ if __name__ == '__main__':
 
     init = [N-E-data_confirm[0]-data_fatality[0],
             E, data_confirm[0], data_fatality[0]]
-
 
     model = Learner_SuEIR(N=N, E_0=E, I_0=data_confirm[0], R_0=data_fatality[0], a=a, decay=decay)
 
