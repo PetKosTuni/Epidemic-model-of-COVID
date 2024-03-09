@@ -90,7 +90,7 @@ def validation_loss(model, init, params_all, train_data, val_data, new_sus, pop_
     @param train_data Training data used to calculate predicted output.
     @param val_data Validation data used to calculate validation loss by comparing it to the prediction data.
     @param new_sus Amount of new suspectible individuals.
-    @param pop_in Float value used to calculate the amount of population joining the suspecitible population.
+    @param pop_in Flag used to calculate the amount of population joining the suspecitible population. Gives realism to calculations.
     @return Float value representing the validation loss of the model.
     """
 
@@ -186,6 +186,109 @@ def get_region_list():
 
         return {'region_list': region_list, 'mid_dates': mid_dates, 'write_dir': write_dir, 'Nation_Pop': Nation_Pop, }
 
+def generate_parameters():
+    """! The function creates a list of regions, nations or counties depending on input parameters. It also creates the names for the directories where the validation files are written.
+    @return A dictionary containing all the variables, which depend on whether a state, county or nation was chosen.
+    """
+
+    if args.level == "state":
+        state = str(region)
+        df_Population = pd.read_csv('data/us_population.csv')
+        print(state)
+        Pop=df_Population[df_Population['STATE']==state]["Population"].to_numpy()[0]
+        start_date = get_start_date(data.get("2020-03-22", args.END_DATE, state),100)
+        if state in mid_dates.keys():
+            second_start_date = mid_dates[state]
+            train_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, args.END_DATE, state)]
+            reopen_flag = True
+        else:
+            second_start_date = "2020-08-30"
+            train_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, args.END_DATE, state)]
+            reopen_flag = False
+
+        if state in mid_dates.keys():
+            resurge_start_date = mid_dates_state_resurge[state] if state in mid_dates_state_resurge.keys() else "2020-09-15"
+            train_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, resurge_start_date, state), \
+                data.get(resurge_start_date, args.END_DATE, state)]
+            full_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, resurge_start_date, state), \
+                data.get(resurge_start_date, args.VAL_END_DATE, state)]
+
+
+        val_data = data.get(args.END_DATE, args.VAL_END_DATE, state)
+        if state in decay_state.keys():
+            a, decay = decay_state[state][0], decay_state[state][1]
+        else:
+            a, decay = 0.7, 0.3          
+        # will rewrite it using json
+        pop_in = 1/400
+        if state == "California":
+            pop_in = 0.01
+            
+    elif args.level == "county":
+        county, state = region.split("_")
+        region = county + ", " + state
+        key = county + "_" + state
+
+        Pop=County_Pop[key][0]
+        start_date = get_start_date(data.get("2020-03-22", args.END_DATE, state, county))
+        if state=="California" and county in mid_dates.keys():
+            second_start_date = mid_dates[county]
+            reopen_flag = True
+        elif state in mid_dates_state.keys() and not (state=="Arkansas" or state == "Montana"):
+            second_start_date = mid_dates_state[state]
+            reopen_flag = True
+        else:
+            second_start_date = "2020-08-30"
+            reopen_flag = False
+
+        if start_date < "2020-05-10":
+            train_data = [data.get(start_date, second_start_date, state, county), data.get(second_start_date, args.END_DATE, state, county)]
+        else:
+            train_data = [data.get(start_date, args.END_DATE, state, county)]
+        val_data = data.get(args.END_DATE, args.VAL_END_DATE, state, county)
+        if state in decay_state.keys():
+            a, decay = decay_state[state][0], decay_state[state][1]
+        else:
+            a, decay = 0.7, 0.32
+        if county in north_cal and state=="California":
+            decay = 0.03
+        pop_in = 1/400
+
+        if state in mid_dates_state.keys():
+            resurge_start_date = mid_dates_state_resurge[state] if state in mid_dates_state_resurge.keys() else "2020-09-15"
+            train_data = [data.get(start_date, second_start_date, state, county), data.get(second_start_date, resurge_start_date, state, county), \
+                data.get(resurge_start_date, args.END_DATE, state, county)]
+            full_data = [data.get(start_date, second_start_date, state, county), data.get(second_start_date, resurge_start_date, state, county), \
+                data.get(resurge_start_date, args.VAL_END_DATE, state, county)]
+
+
+    elif args.level == "nation":
+        nation = str(region)
+        Pop = Nation_Pop["United States"] if nation == "US" else Nation_Pop[nation]
+
+        if nation in mid_dates_nation.keys():
+            second_start_date = mid_dates[nation]
+            reopen_flag = True
+        elif nation == "Turkey":
+            second_start_date = "2020-06-07"
+            reopen_flag = False
+        else:
+            second_start_date = "2020-07-30"
+            reopen_flag = False
+        pop_in = 1/2000 if nation == "Germany" else 1/400
+
+        start_date = START_nation[nation]
+        train_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, args.END_DATE, nation)]
+        full_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, args.END_DATE, nation)]
+
+        if nation=="US":
+            resurge_start_date = "2020-09-15"
+            train_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, resurge_start_date, nation), data.get(resurge_start_date, args.END_DATE, nation)]
+            full_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, resurge_start_date, nation), data.get(resurge_start_date, args.END_DATE, nation)]
+
+        val_data = data.get(args.END_DATE, args.VAL_END_DATE, nation)
+        a, decay = FR_nation[nation]
+
 def generate_validation_files():
     """! The function creates the validation parameters for each region, state or county
     """
@@ -209,103 +312,7 @@ def generate_validation_files():
         # get the start date, and second start date
         # get the parameters a and decay
         
-        if args.level == "state":
-            state = str(region)
-            df_Population = pd.read_csv('data/us_population.csv')
-            print(state)
-            Pop=df_Population[df_Population['STATE']==state]["Population"].to_numpy()[0]
-            start_date = get_start_date(data.get("2020-03-22", args.END_DATE, state),100)
-            if state in mid_dates.keys():
-                second_start_date = mid_dates[state]
-                train_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, args.END_DATE, state)]
-                reopen_flag = True
-            else:
-                second_start_date = "2020-08-30"
-                train_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, args.END_DATE, state)]
-                reopen_flag = False
-
-            if state in mid_dates.keys():
-                resurge_start_date = mid_dates_state_resurge[state] if state in mid_dates_state_resurge.keys() else "2020-09-15"
-                train_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, resurge_start_date, state), \
-                 data.get(resurge_start_date, args.END_DATE, state)]
-                full_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, resurge_start_date, state), \
-                 data.get(resurge_start_date, args.VAL_END_DATE, state)]
-
-
-            val_data = data.get(args.END_DATE, args.VAL_END_DATE, state)
-            if state in decay_state.keys():
-                a, decay = decay_state[state][0], decay_state[state][1]
-            else:
-                a, decay = 0.7, 0.3          
-            # will rewrite it using json
-            pop_in = 1/400
-            if state == "California":
-                pop_in = 0.01
-        elif args.level == "county":
-            county, state = region.split("_")
-            region = county + ", " + state
-            key = county + "_" + state
-
-            Pop=County_Pop[key][0]
-            start_date = get_start_date(data.get("2020-03-22", args.END_DATE, state, county))
-            if state=="California" and county in mid_dates.keys():
-                second_start_date = mid_dates[county]
-                reopen_flag = True
-            elif state in mid_dates_state.keys() and not (state=="Arkansas" or state == "Montana"):
-                second_start_date = mid_dates_state[state]
-                reopen_flag = True
-            else:
-                second_start_date = "2020-08-30"
-                reopen_flag = False
-
-            if start_date < "2020-05-10":
-                train_data = [data.get(start_date, second_start_date, state, county), data.get(second_start_date, args.END_DATE, state, county)]
-            else:
-                train_data = [data.get(start_date, args.END_DATE, state, county)]
-            val_data = data.get(args.END_DATE, args.VAL_END_DATE, state, county)
-            if state in decay_state.keys():
-                a, decay = decay_state[state][0], decay_state[state][1]
-            else:
-                a, decay = 0.7, 0.32
-            if county in north_cal and state=="California":
-                decay = 0.03
-            pop_in = 1/400
-
-            if state in mid_dates_state.keys():
-                resurge_start_date = mid_dates_state_resurge[state] if state in mid_dates_state_resurge.keys() else "2020-09-15"
-                train_data = [data.get(start_date, second_start_date, state, county), data.get(second_start_date, resurge_start_date, state, county), \
-                 data.get(resurge_start_date, args.END_DATE, state, county)]
-                full_data = [data.get(start_date, second_start_date, state, county), data.get(second_start_date, resurge_start_date, state, county), \
-                 data.get(resurge_start_date, args.VAL_END_DATE, state, county)]
-
-
-        elif args.level == "nation":
-            nation = str(region)
-            Pop = Nation_Pop["United States"] if nation == "US" else Nation_Pop[nation]
-
-            if nation in mid_dates_nation.keys():
-                second_start_date = mid_dates[nation]
-                reopen_flag = True
-            elif nation == "Turkey":
-                second_start_date = "2020-06-07"
-                reopen_flag = False
-            else:
-                second_start_date = "2020-07-30"
-                reopen_flag = False
-            pop_in = 1/2000 if nation == "Germany" else 1/400
-
-
-            start_date = START_nation[nation]
-            train_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, args.END_DATE, nation)]
-            full_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, args.END_DATE, nation)]
-
-            if nation=="US":
-                resurge_start_date = "2020-09-15"
-                train_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, resurge_start_date, nation), data.get(resurge_start_date, args.END_DATE, nation)]
-                full_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, resurge_start_date, nation), data.get(resurge_start_date, args.END_DATE, nation)]
-
-            val_data = data.get(args.END_DATE, args.VAL_END_DATE, nation)
-            a, decay = FR_nation[nation]
+        generate_parameters()
             
         print(len(train_data))
         mean_increase = 0
@@ -333,7 +340,7 @@ def generate_validation_files():
             if not args.level == "nation" and (state == "New York"):
                 pop_in = 1/5000
             if args.level == "nation" and (region == "Iran"):
-                pop_in = 1/1000  
+                pop_in =  1/1000 
             if args.level == "nation" and (region == "US"):
                 pop_in = 1/400
             if args.popin >0:
