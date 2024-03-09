@@ -5,11 +5,11 @@ from data import NYTimes, Hospital_US, JHU_global
 from matplotlib import pyplot as plt
 
 def loss(pred, target, smoothing=10): 
-    """!
-    @param pred 
-    @param target
-    @param smoothing
-    @return
+    """! Mean squared logarithmic error (MSLE) -function for calculating loss for training model.
+    @param pred Predicted values.
+    @param target Actual values.
+    @param smoothing Smoothing parameter for maintaining numerical stability.
+    @return The float value of the calculated loss.
     """
 
     return np.mean((np.log(pred+smoothing) - np.log(target+smoothing))**2)

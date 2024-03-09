@@ -128,10 +128,11 @@ def get_county_list(cc_limit=200, pop_limit=50000):
 
     return county_list
 
-# The main functionality of the file happens here. At the end validation parameters, such as validation loss, for each region
-# (or state, depends on chosen level parameters) is saved to two files, which are then used to generate predictions in the generate_predictions.py -file.
-if __name__ == '__main__':
-    
+def get_region_list():
+    """! The function creates a list of regions, nations or counties depending on input parameters. It also creates the names for the directories where the validation files are written.
+    @return A dictionary containing all the variables, which depend on whether a state, county or nation was chosen.
+    """
+
     # initial the dataloader, get region list 
     # get the directory of output validation files
     if args.level == "state":
@@ -147,7 +148,9 @@ if __name__ == '__main__':
             region_list = [args.state]  
             # region_list = ["New York", "California", "Illinois", "North Carolina", "Florida", "Texas", "Georgia", "Arizona", "South Carolina", "Alabama"]
             # region_list = ["New York", "California"]
-            write_dir = "val_results_state/test" + args.dataset + "_"       
+            write_dir = "val_results_state/test" + args.dataset + "_"
+
+        return {'region_list': region_list, 'mid_dates': mid_dates, 'write_dir': write_dir}
         
     elif args.level == "county":
         state = "California"
@@ -166,7 +169,9 @@ if __name__ == '__main__':
         else:
             region_list = get_county_list(cc_limit=2000, pop_limit=10)
             print("# feasible counties:", len(region_list))
-            write_dir = "val_results_county/" + args.dataset + "_" 
+            write_dir = "val_results_county/" + args.dataset + "_"
+
+        return {'region_list': region_list, 'mid_dates': mid_dates, 'write_dir': write_dir, 'state': state, 'County_Pop': County_Pop}
 
     elif args.level == "nation":
         data = JHU_global()
@@ -178,10 +183,24 @@ if __name__ == '__main__':
             write_dir = "val_results_world/test" + args.dataset + "_" 
         with open("data/world_pop.json", 'r') as f:
             Nation_Pop = json.load(f)
+
+        return {'region_list': region_list, 'mid_dates': mid_dates, 'write_dir': write_dir, 'Nation_Pop': Nation_Pop, }
+
+def generate_validation_files():
+    """! The function creates the validation parameters for each region, state or county
+    """
         
-    
+    region_list_dict = get_region_list()
+    region_list = region_list_dict['region_list']
+    mid_dates = region_list_dict['mid_dates']
+    write_dir = region_list_dict['write_dir']
+    if 'state' in region_list_dict:
+        state = region_list_dict['state']
+    if 'County_Pop' in region_list_dict:
+        County_Pop = region_list_dict['County_Pop']
+    if 'Nation_Pop' in region_list_dict:
+        Nation_Pop = region_list_dict['Nation_Pop']
     params_allregion = {}
-   
 
     for region in region_list:
 
@@ -424,3 +443,11 @@ if __name__ == '__main__':
     write_file_name_best = write_dir + "val_params_best_" + "END_DATE_" + args.END_DATE + "_VAL_END_DATE_" + args.VAL_END_DATE
 
     write_val_to_json(params_allregion, write_file_name_all, write_file_name_best)
+
+# The main functionality of the file happens here. At the end validation parameters, such as validation loss, for each region
+# (or state, depends on chosen level parameters) is saved to two files, which are then used to generate predictions in the generate_predictions.py -file.
+# This process is described as "The passed inputs go through the ’Validation File Generator’ which generates a parameter validation set.
+# Once the parameter validation set is created, it is passed to the ’Estimation Phase’ which in turn generates the predicted data file." in the linked
+# master's thesis.
+if __name__ == '__main__':
+    generate_validation_files()
