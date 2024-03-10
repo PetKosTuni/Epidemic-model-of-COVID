@@ -65,7 +65,7 @@ class NYTimes(Data):
         self.state_list = self.table["state"].unique()
 
     def date_range(self, state, county=None):
-        """! Get the first and last dates of available data in the dataset.
+        """! Get the first and last dates of available data in the dataset. If level is counties, a county should be specified.
         @param state  Name of the state for which range is being looked up
         @param county  Name of the county for which range is being looked up, IF level of data is counties. Default is 'None'.
         @return  Tuple of strings, first date and last date, in format 'yyyy-mm-dd'
