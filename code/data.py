@@ -235,7 +235,7 @@ class Hospital_CA(Data):
     def date_range(self, region):
         """! Get the first and last dates of available data in the dataset.
         @param region  Name of the region (county) for which range is being looked up.
-        @return  Tuple of strings, first date and last date.'
+        @return  Tuple datetime dates
         """
         table = self.table[self.table['county'] == region] # was County Name
         dates = pd.to_datetime(table['todays_date']).dt.date.to_numpy() # was Most Recent Date
@@ -268,9 +268,7 @@ class Hospital_US(Data):
         stateabbr = us.states.lookup(state).abbr #.lower() # in the ...daily.csv the API call gives, the abbreviation is apparently lowercase
         table = pd.read_csv(datafile)[['state', 'date', 'hospitalizedCurrently', 'inIcuCurrently']]
         self.table = table[table.notnull().all(axis=1)]
-        #print(self.table)
         statetable = table[table['state'] == stateabbr] # select only the state we want
-        #print(statetable)
         statetable = statetable.drop(columns=['state']) # remove the 'state' column to maintain base-code dataframe format
         # Here we assume that once there is data, then the data is cumulative   # (WTF does this mean? Cumulative of what? -Eetu)
         self.table = statetable[table.notnull().all(axis=1)] # Make table only include rows where all values are not null. This is base code, from this I assume that in the .csv NaN does not mean 0
@@ -278,9 +276,9 @@ class Hospital_US(Data):
     
     def date_range(self):
         """! Get the first and last dates of available data in the dataset.
-        @return  Tuple of strings, first date and last date.
+        @return  Tuple of datetime dates
         """
-        dates = pd.to_datetime(self.table['date'], format='%Y%m%d').dt.date.to_numpy()
+        dates = pd.to_datetime(self.table['date'], format='%Y-%m-%d').dt.date.to_numpy()
         return dates[-1], dates[0]
     
     def get(self, start_date, end_date):
