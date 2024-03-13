@@ -182,12 +182,12 @@ class JHU_global(Data):
         self.recover_table = recover_table.groupby(
             'Country/Region').sum().transpose()
 
-    def date_range(self, country):
-        """! Get the first and last dates of available data in the dataset.
+    def date_range(self, country): # should this be changed to actually look up the country?
+        """! Get the first and last dates of available data in the dataset for confirmed cases.
         @param country  Name of the country for which range is being looked up.
         @return  Tuple of strings, first date and last date, in format 'yyyy-mm-dd'
         """
-        date = pd.to_datetime(self.confirm_table.index).date
+        date = pd.to_datetime(self.confirm_table.iloc[1:].index).date
         start = str(date[0])
         end = str(date[-1])
         return start, end
@@ -219,16 +219,16 @@ class JHU_global(Data):
         return confirm.to_numpy(), death.to_numpy(), recover.to_numpy()
 
 
-class Hospital_CA(Data): #This is not used in the base code, also the url is invalid (17.02.2024), and there is no way to find the dataset otherwise
+class Hospital_CA(Data): 
     """! Class for hospital data of California Health and Human Services. Seemingly not used in the code.
     Inherits the Data base class.
     """ 
-    def __init__(self): # Taking a crack at this
+    def __init__(self):
         """! Hospital_CA class initializer. Creates pandas dataframe.
         """
         #url = 'https://data.chhs.ca.gov/dataset/6882c390-b2d7-4b9a-aefa-2068cee63e47/resource/6cd8d424-dfaa-4bdd-9410-a3d656e1176e/download/covid19data.csv'
         datafile = 'data/covid19hospitalbycounty_california.csv'
-        #self.table = pd.read_csv(url)[['Most Recent Date', 'County Name',                               # The columns are different... fuck
+        #self.table = pd.read_csv(url)[['Most Recent Date', 'County Name',                               
                                        #'COVID-19 Positive Patients', 'ICU COVID-19 Positive Patients']] # I assume COVID Positive = COVID confirmed
         self.table = pd.read_csv(datafile)[['todays_date', 'county', 'hospitalized_covid_confirmed_patients', 'icu_covid_confirmed_patients']]
 
@@ -255,7 +255,7 @@ class Hospital_CA(Data): #This is not used in the base code, also the url is inv
         mask = (dates >= start) & (dates <= end)
         return table[mask]['hospitalized_covid_confirmed_patients'].to_numpy(), table[mask]['icu_covid_confirmed_patients'].to_numpy() # ^
 
-class Hospital_US(Data):       # The url is invalid (17.02.2024), no way to know what data this was referencing. Possibly used right at the end of data.py. Someone should probably make this work if possible.
+class Hospital_US(Data):
     """! Class for hospital data across the United States. Inherits the Data base class.
     """
     def __init__(self, state): 
