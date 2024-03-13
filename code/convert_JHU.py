@@ -51,12 +51,18 @@ def get_JHU(level):
             dates = df_confirm.columns
             data_confirm, data_fata = np.asarray(data_confirm)[-length:], np.asarray(data_fata)[-length:]
             dates = np.asarray(dates)[-length:].tolist()
-            dates = [datetime.strptime(d, "%m/%d/%y").strftime('%Y-%m-%d') for d in dates]
+            first_date_index = 0
+            for date in dates:
+                try:
+                    datetime.strptime(date, "%m/%d/%y")
+                    break
+                except ValueError:
+                    first_date_index += 1
+            dates = [datetime.strptime(d, "%m/%d/%y").strftime('%Y-%m-%d') for d in dates[first_date_index:]]
             data["state"] = region
             data["date"] = dates
-            data["cases"] = data_confirm
-            data["deaths"] = data_fata
-            
+            data["cases"] = data_confirm[-len(dates):]
+            data["deaths"] = data_fata[-len(dates):]
             df = pd.DataFrame(data)
             frame.append(df)
             
