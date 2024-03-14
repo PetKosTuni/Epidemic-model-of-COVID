@@ -13,6 +13,21 @@ import os
 os.environ['DC_STATEHOOD'] = '1'
 import us
 
+def first_valid_date(dates, format="%m/%d/%y"):
+    """! Find the index of the first valid date item in an array
+    @param dates  an array of dates
+    @param format  valid date format
+    @return  the index of the first valid date in dates
+    """
+    first_date_index = 0
+    for date in dates:
+        try:
+            datetime.strptime(date, format)
+            break
+        except ValueError:
+            first_date_index += 1
+    return first_date_index
+
 def ensure_float64(arr):
     """! Convert array to dtype float64, if it is not already
     @param arr Array of numbers
