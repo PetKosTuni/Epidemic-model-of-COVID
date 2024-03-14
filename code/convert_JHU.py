@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from datetime import timedelta, datetime
 import math
+from util import first_valid_date
 
 
 def get_JHU(level):
@@ -85,16 +86,21 @@ def get_JHU(level):
             # Get the confirmed cases and fatalities from the state for the last "length" days.
             data_confirm, data_fata = np.asarray(data_confirm)[-length:], np.asarray(data_fata)[-length:]
 
-            # Get the dates from the state for the last "length" days and change the date format.
+            # Get the dates from the state for the last "length" days.
             dates = np.asarray(dates)[-length:].tolist()
-            dates = [datetime.strptime(d, "%m/%d/%y").strftime('%Y-%m-%d') for d in dates]
 
+            # Find the first valid date after possible invalid data items
+            first_date_index = first_valid_date(dates)
+
+            # Change the date format.
+            dates = [datetime.strptime(d, "%m/%d/%y").strftime('%Y-%m-%d') for d in dates[first_date_index:]]
+            
             # Add state's COVID-19 data to Data dictionary.
             data["state"] = region
             data["date"] = dates
-            data["cases"] = data_confirm
-            data["deaths"] = data_fata
-            
+            data["cases"] = data_confirm[-len(dates):]
+            data["deaths"] = data_fata[-len(dates):]
+
             # Create DataFrame from the nation's Data dictionary and add it to the frame list.
             df = pd.DataFrame(data)
             frame.append(df)
@@ -142,9 +148,14 @@ def get_JHU(level):
                     # Get the confirmed cases and fatalities from the state for the last "length" days.
                     data_confirm, data_fata = np.asarray(data_confirm)[-length:], np.asarray(data_fata)[-length:]
 
-                    # Get the dates from the county for the last "length" days and change the date format.
+                    # Get the dates from the county for the last "length" days.
                     dates = np.asarray(dates)[-length:].tolist()
-                    dates = [datetime.strptime(d, "%m/%d/%y").strftime('%Y-%m-%d') for d in dates]
+
+                    # Find the first valid date after possible invalid data items
+                    first_date_index = first_valid_date(dates)
+
+                    # Change the date format.
+                    dates = [datetime.strptime(d, "%m/%d/%y").strftime('%Y-%m-%d') for d in dates[first_date_index:]]
 
                     # Check if FIPS is not NaN.
                     if not np.isnan(fips):
@@ -152,8 +163,8 @@ def get_JHU(level):
                         data["county"] = county
                         data["state"] = region
                         data["date"] = dates
-                        data["cases"] = data_confirm
-                        data["deaths"] = data_fata
+                        data["cases"] = data_confirm[-len(dates):]
+                        data["deaths"] = data_fata[-len(dates):]
                         data["fips"] = "0"+str(int(fips)) if fips<9999 else str(int(fips))
 
                         # Create DataFrame from the nation's Data dictionary and add it to the frame list.
