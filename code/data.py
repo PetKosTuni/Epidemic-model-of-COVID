@@ -203,7 +203,7 @@ class JHU_global(Data):
         countryconfirm = self.confirm_table[country].iloc[1:] # remove Province/State'
         countrydeath = self.death_table[country].iloc[1:]
         countryrecover = self.recover_table[country].iloc[1:]
-        date = pd.to_datetime(self.confirm_table.index[1:])
+        date = pd.to_datetime(self.confirm_table.index[1:], format="%m/%d/%y")
         start = datetime.datetime.strptime(start_date, '%Y-%m-%d')
         end = datetime.datetime.strptime(end_date, '%Y-%m-%d')
         confirm = countryconfirm.loc[(date >= start) & (date <= end)]
