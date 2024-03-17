@@ -15,9 +15,9 @@ import us
 
 def func(x, a, b, bias):   
     return a*np.minimum(np.exp(-b*(x+bias)), 1)
-def func_root(x, a, b, bias):   
+def func_root(x, a, b, bias):
     return a*np.minimum(np.exp(-b*(x**0.5)), 1)
-def func_new(x, a, b, bias):   
+def func_new(x, a, b, bias):
     return a*np.minimum(np.exp(-b*(x+bias)), 1) + 0.2
 def func_poly(x, a, b, bias):
     return a*np.minimum((x+bias+1)**(-b), 1)

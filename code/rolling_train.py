@@ -4,10 +4,12 @@ from model import Learner_SuEIR, Learner_SuEIR_H
 from data import NYTimes, Hospital_US, JHU_global
 from matplotlib import pyplot as plt
 
+# This file constains helpful functions for model training and predicting data.
+
 def loss(pred, target, smoothing=10):
     """! Mean squared logarithmic error (MSLE) -function for calculating loss for training model.
-    @param pred Predicted values.
-    @param target Actual values.
+    @param pred Predicted values used to calculate loss.
+    @param target Actual values used to calculate loss.
     @param smoothing Smoothing parameter for maintaining numerical stability.
     @return The float value of the calculated loss.
     """
@@ -16,14 +18,14 @@ def loss(pred, target, smoothing=10):
     return np.mean((np.log(pred+smoothing) - np.log(target+smoothing))**2)
 
 def train(model, init, prev_params, train_data, reg=0, lag=0):
-    """!
-    @param model 
-    @param init
-    @param prev_params
-    @param train_data 
-    @param reg
-    @param lag
-    @return
+    """! Function for training a model with data.
+    @param model The model to be trained.
+    @param init A python list containing initialization parameters.
+    @param prev_params Parameters compared when calculating reg_loss (regularization loss), which is not used.
+    @param train_data The data the model is trained with.
+    @param reg Parameter not used in the function (regularization).
+    @param lag The lag parameter is used to shift data backward or forwards.
+    @return Minimized loss train function, divided into the model parameters and the training loss.
     """
 
     data_confirm, data_fatality = train_data[0], train_data[1]
@@ -38,9 +40,9 @@ def train(model, init, prev_params, train_data, reg=0, lag=0):
         confirm_perday[np.maximum(0, len(confirm_perday)-7):])
 
     def loss_train(params):
-        """!
-        @param params
-        @return
+        """! Function to calculate training loss
+        @param params The model parameters beta, gamma, sigma and mu.
+        @return The loss value during training.
         """
 
         _, _, _, pred_remove, pred_confirm, pred_fatality = model(size, params, init, lag)
@@ -83,13 +85,13 @@ def train(model, init, prev_params, train_data, reg=0, lag=0):
 
 
 def rolling_train(model, init, train_data, new_sus, pop_in=1/500):
-    """!
-    @param model
-    @param init
-    @param train_data 
-    @param new_sus
-    @param pop_in
-    @return
+    """! Train multiple models in a rolling manner, the susceptible and exposed populations will be transfered to the next period as initialization.
+    @param model The models to be trained.
+    @param init A python list containing initial parameters S0, I0, E0, R0.
+    @param train_data The data the model is trained with.
+    @param new_sus The amount of new suspectible individuals.
+    @param pop_in Parameter used to calculate the amount of population joining the suspecitible population.
+    @return Two lists containing all collective parameters and training losses gained by training with the train function.
     """
 
     lag = 0
@@ -133,16 +135,16 @@ def rolling_train(model, init, train_data, new_sus, pop_in=1/500):
     return params_all, loss_all 
 
 def rolling_prediction(model, init, params_all, train_data, new_sus, pred_range, pop_in=1/500, daily_smooth=False):
-    """!
-    @param model 
-    @param init
-    @param params_all
-    @param train_data 
-    @param new_sus
-    @param pred_range
-    @param pop_in
-    @param daily_smooth
-    @return
+    """! The function uses the model to forecast the fatality and confirmed cases in a rolling manner.
+    @param model The model used to predict data.
+    @param init The initial parameters for the model.
+    @param params_all Parameters gained by training the model.
+    @param train_data The training data used.
+    @param new_sus The amount of new suspectible individuals.
+    @param pred_range The range given as days to the model to calculate the forecast.
+    @param pop_in Parameter used to calculate the amount of population joining the suspecitible population.
+    @param daily_smooth Boolean value used to determine if smoothing, and therefore the gap parameters, should be used
+    @return Confirmed, fatal and active case prediction data.
     """
 
     lag = 0
@@ -228,14 +230,14 @@ def rolling_prediction(model, init, params_all, train_data, new_sus, pred_range,
     return pred_confirm, pred_fatality, pred_act
 
 def rolling_likelihood(model, init, params_all, train_data, new_sus, pop_in):
-    """!
-    @param model 
-    @param init
-    @param params_all
-    @param train_data 
-    @param new_sus
-    @param pop_in
-    @return
+    """! The function calculates the likelihood for determining the confidence interval.
+    @param model The model used to calculate the likelihood.
+    @param init The initial model parameters.
+    @param params_all Parameters gained by training the model.
+    @param train_data The training data used.
+    @param new_sus The amount of new suspectible individuals.
+    @param pop_in Parameter used to calculate the amount of population joining the suspecitible population.
+    @return The accumulated loss in a list.
     """
 
     lag = 0
@@ -268,6 +270,7 @@ def rolling_likelihood(model, init, params_all, train_data, new_sus, pop_in):
     model.reset()
     return loss_all
 
+# This part is probably for testing purposes and not actually required to run the code.
 if __name__ == '__main__':
 
     N = 60000000

@@ -11,7 +11,6 @@ class Model(object):
         warnings.warn('Model call method does not implement')
         raise NotImplementedError
 
-
 '''
 Inherit the Model Object:
 class xxx(Model):
@@ -20,7 +19,6 @@ class xxx(Model):
     def __call__(self, init_point, para, time_range):
         pass
 '''
-
 
 class Learner_SuEIR(Model):
     def __init__(self, N, E_0, I_0, R_0, a, decay, bias=0.005):
@@ -77,8 +75,6 @@ class Learner_SuEIR(Model):
         self.N = self.initial_N
         self.pop_in = self.initial_pop_in
         self.bias = self.initial_bias
-
-
 
 class Learner_SEIR(Model):
     def __init__(self, N, E_0, I_0, R_0, a, decay, bias=0):
