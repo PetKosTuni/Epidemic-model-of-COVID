@@ -130,7 +130,7 @@ def get_county_list(cc_limit=200, pop_limit=50000):
 
 def get_region_list():
     """! The function creates a list of regions, nations or counties depending on input parameters. It also creates the names for the directories where the validation files are written.
-    @return A dictionary containing variables, which depend on whether a state, county or nation was chosen.
+    @return A dictionary containing parameters, which depend on whether a state, county or nation was chosen.
     """
 
     state = 0
@@ -186,10 +186,13 @@ def get_region_list():
     return {'region_list': region_list, 'mid_dates': mid_dates, 'write_dir': write_dir, 'state': state, 'County_Pop': County_Pop, 'Nation_Pop': Nation_Pop}
 
 def generate_parameters(region, param_dict):
-    """!
-    @return
+    """! The function creates a dictionary of variables, such as the a and decay parameters, to use when generating validation results.
+    @param region The current region (state, county or nation) which is used to generate validation results.
+    @param param_dict A dictionary that contains needed parameters. Result of refactoring.
+    @return A dictionary containing variables, which depend on whether a state, county or nation was chosen.
     """
 
+    nation = 0
     state = param_dict['state']
     mid_dates = param_dict['mid_dates']
     if args.level == "state":
@@ -289,9 +292,17 @@ def generate_parameters(region, param_dict):
         val_data = data.get(args.END_DATE, args.VAL_END_DATE, nation)
         a, decay = FR_nation[nation]
 
-    return {'a': a, 'decay': decay, 'pop_in': pop_in, 'Pop': Pop, 'state': state, 'train_data': train_data, 'reopen_flag': reopen_flag, 'full_data': full_data, 'val_data': val_data, 'second_start_date': second_start_date}
+    return {'a': a, 'decay': decay, 'pop_in': pop_in, 'Pop': Pop, 'state': state,
+             'train_data': train_data, 'reopen_flag': reopen_flag, 'full_data': full_data,
+               'val_data': val_data, 'second_start_date': second_start_date, 'nation': nation}
 
 def generate_validation_results(parameters, params_allregion, region):
+    """! The function fills the params_allregion dictionary with validation results per region.
+    @param parameters A dictionary that contains needed parameters. Result of refactoring.
+    @param params_allregion A dictionary that will contain all the validation results from all the wanted regions after modification.
+    @param region The current region (state, county or nation) which is used to generate validation results.
+    @return The modified params_allregion dictionary.
+    """
 
     pop_in = parameters['pop_in']
     state = parameters['state']
@@ -351,7 +362,7 @@ def generate_validation_results(parameters, params_allregion, region):
         if region == "Argentina" :
             rs *= 4
 
-    A_inv, I_inv, R_inv, loss_list0, loss_list1, params_list, learner_list, I_list = [],[],[],[],[],[],[],[]
+    A_inv, I_inv, R_inv, g0, loss_list1, params_list, learner_list, I_list = [],[],[],[],[],[],[],[]
         
     val_log = []
     min_val_loss = 10 #used for finding the minimum validation loss
@@ -413,6 +424,7 @@ def generate_validation_results(parameters, params_allregion, region):
 
             deaths = train_data[0][1][0:-1].tolist() + train_data[-1][1][0:-1].tolist() + pred_fatality.tolist()
             true_deaths =  train_data[0][1][0:-1].tolist() + train_data[-1][1][0:-1].tolist() + val_data[1][0:-1].tolist()
+            #When the smallest validation loss yet is found, the plots are overwritten
             if val_loss < min_val_loss:
                 plt.figure()
                 plt.plot(confirm)
@@ -435,7 +447,7 @@ def generate_validation_results(parameters, params_allregion, region):
     return params_allregion
 
 def generate_validation_files():
-    """! The function creates the validation results for each region, state or county
+    """! The function creates the validation results for each region, state or county, and saves them in json-files.
     """
         
     region_list_dict = get_region_list()
@@ -451,8 +463,8 @@ def generate_validation_files():
         # get the parameters a and decay
         
         parameters = generate_parameters(region, region_list_dict)
-            
-        print(len(train_data))
+        
+        print(len(parameters['train_data']))
         
         parameters_from_all_regions = generate_validation_results(parameters, parameters_from_all_regions, region)
 

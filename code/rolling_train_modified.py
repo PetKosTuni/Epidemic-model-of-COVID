@@ -3,6 +3,7 @@ from scipy.optimize import minimize
 from model import Learner_SuEIR, Learner_SuEIR_H
 from data import NYTimes, Hospital_US, JHU_global
 from matplotlib import pyplot as plt
+from util import ensure_float64
 
 # This file constains modified functions for model training and predicting data from the rolling_train.py -file.
 
@@ -13,7 +14,8 @@ def loss(pred, target, smoothing=10):
     @param smoothing Smoothing parameter for maintaining numerical stability.
     @return The float value of the calculated loss.
     """
-
+    target = ensure_float64(target)
+    pred = ensure_float64(pred)
     return np.mean((np.log(pred+smoothing) - np.log(target+smoothing))**2)
 
 def train(model, init, prev_params, train_data, reg=0, lag=0):
