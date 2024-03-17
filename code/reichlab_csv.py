@@ -76,9 +76,6 @@ mid_dates_nation = {"US": "2020-06-15", "Mexico": "2020-07-05", "India": "2020-0
 # Counties in Northern California. NOT USED ON THIS FILE.
 north_cal = ["Santa Clara", "San Mateo", "Alameda", "Contra Costa", "Sacramento", "San Joaquin", "Fresno"]
 
-
-
-
 # Create filename from prediction start date. 
 pred_start_date = "2021-09-19"
 write_file_name = pred_start_date + "-UCLA-SuEIR_state.csv"

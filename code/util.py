@@ -64,7 +64,7 @@ def func_new(x, a, b, bias):
     @param b  a numeric value used to calculate the coefficient
     @param bias  a numeric value used to calculate the coefficient
     @return  the newly calcluated coefficient
-    """   
+    """
     return a*np.minimum(np.exp(-b*(x+bias)), 1) + 0.2
 
 def func_poly(x, a, b, bias):
@@ -86,7 +86,6 @@ def func_sin(x, a, b):
     """
     return a*np.sin(2*np.pi*(x+b)/7)
 
-
 def lognorm_ave(x, a=4, b=0.568):
     """! Function used to calculate the average of a log-normal distribution random variable.
     @param x  an array of numeric data. The values themselves are not relevant, only the length of the array.
@@ -100,8 +99,6 @@ def lognorm_ave(x, a=4, b=0.568):
     weights = lognorm_pdf[0:l]/lognorm_pdf[0:l].sum()
     weights = weights[::-1]
     return (x*weights).sum()
-
-
 
 def add_fluction(x, a=0.3, b=-0.5):
     """! Function used to add fluctuation to a set of numeric data.
@@ -128,7 +125,6 @@ def add_fluction(x, a=0.3, b=-0.5):
     data_output += x[num_weeks*7+1:].tolist()
 
     return np.asarray(data_output)
-
 
 def write_val_to_json(params_allregion, write_file_name_all, write_file_name_best, limit=.5e-5):
     """! Function used to write validation results into .json files.
@@ -173,11 +169,6 @@ def write_val_to_json(params_allregion, write_file_name_all, write_file_name_bes
     f = open(write_file_name_best,"w")
     f.write(dict_file)
     f.close()
-
-
-
-
-
 
 def state2fips(state):
     """! Function used return the Federal Information Processing Standard code of the US state
@@ -280,8 +271,6 @@ def num2str(x):
     if len(x)==2:
         x += "000"
     return x
-
-
 
 def plotting(pred_data, region):
     """! Function presumably used for plotting the data that the model predicts. Not used anywhere in the code.

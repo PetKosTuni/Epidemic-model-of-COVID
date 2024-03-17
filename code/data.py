@@ -31,7 +31,6 @@ class Data(object):
         warnings.warn('Data get method does not implement')
         raise NotImplementedError
 
-
 '''
 Inherit the Data Object:
 class xxx(Data):
@@ -42,7 +41,6 @@ class xxx(Data):
     def get(self, start_date, end_date):
         pass
 '''
-
 
 class NYTimes(Data):
     """! Class for NYTimes dataset, inherits the Data base class. Data in the dataset is available 
@@ -158,8 +156,6 @@ class JHU_US(Data):
         mask = (date >= start) & (date <= end)
         return tab[mask]['cases'].to_numpy(dtype=float), tab[mask]['deaths'].to_numpy(dtype=float)
 
-
-
 class JHU_global(Data):
     """! Class for Johns Hopkins University Global data. Inherits the Data base class.
     """
@@ -210,7 +206,6 @@ class JHU_global(Data):
         death = countrydeath.loc[(date >= start) & (date <= end)]
         recover = countryrecover.loc[(date >= start) & (date <= end)]
         return confirm.to_numpy(), death.to_numpy(), recover.to_numpy()
-
 
 class Hospital_CA(Data): 
     """! Class for hospital data of California Health and Human Services. Seemingly not used in the code.
@@ -286,8 +281,6 @@ class Hospital_US(Data):
         mask = (dates >= start) & (dates <= end)                                         # but with the localized history csv, this format is used. Seems to work fine...
         masked = self.table[mask].sort_values(by='date')
         return masked['hospitalizedCurrently'].to_numpy(), masked['inIcuCurrently'].to_numpy()
-        
-
 
 if __name__ == '__main__':
     data = Hospital_US('california')

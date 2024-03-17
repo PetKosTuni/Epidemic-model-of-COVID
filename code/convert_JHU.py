@@ -4,7 +4,6 @@ from datetime import timedelta, datetime
 import math
 from util import first_valid_date
 
-
 def get_JHU(level):
     """! Get county/state/nation level COVID-19 data from JHU GitHub.
     @param level Specifies the level of data to be retrieved (county/state/nation).

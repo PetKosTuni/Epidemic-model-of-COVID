@@ -19,7 +19,6 @@ class Model(object):
         warnings.warn('Model call method does not implement')
         raise NotImplementedError
 
-
 '''
 Inherit the Model Object:
 class xxx(Model):
@@ -28,7 +27,6 @@ class xxx(Model):
     def __call__(self, init_point, para, time_range):
         pass
 '''
-
 
 class Learner_SuEIR(Model):
     """! Class for SuEIR (Susceptible, Unreported, Exposed, Infected, Recovered) model learner.
@@ -112,8 +110,6 @@ class Learner_SuEIR(Model):
         self.pop_in = self.initial_pop_in
         self.bias = self.initial_bias
 
-
-
 class Learner_SEIR(Model):
     """! Class for SEIR (Susceptible, Exposed, Infected, Recovered) model learner.
     """
@@ -136,7 +132,7 @@ class Learner_SEIR(Model):
         self.FRratio = a * \
             np.minimum(np.exp(-decay * (np.arange(1000) + bias)), 1) # decaying death date
 
-    def __call__(self, size, params, init):
+    def __call__(self, size, params, init, lag = 0):
         """! Calling method for the learner class.
         @param size  The ending time value for solve_ivp
         @param params  List of statistical parameters for change in each compartment of people. Beta, gamma, sigma
