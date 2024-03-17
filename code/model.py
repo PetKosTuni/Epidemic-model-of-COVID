@@ -132,7 +132,7 @@ class Learner_SEIR(Model):
         self.FRratio = a * \
             np.minimum(np.exp(-decay * (np.arange(1000) + bias)), 1) # decaying death date
 
-    def __call__(self, size, params, init):
+    def __call__(self, size, params, init, lag = 0):
         """! Calling method for the learner class.
         @param size  The ending time value for solve_ivp
         @param params  List of statistical parameters for change in each compartment of people. Beta, gamma, sigma

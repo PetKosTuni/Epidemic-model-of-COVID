@@ -362,7 +362,7 @@ def generate_validation_results(parameters, params_allregion, region):
         if region == "Argentina" :
             rs *= 4
 
-    A_inv, I_inv, R_inv, g0, loss_list1, params_list, learner_list, I_list = [],[],[],[],[],[],[],[]
+    A_inv, I_inv, R_inv, loss_list0, loss_list1, params_list, learner_list, I_list = [],[],[],[],[],[],[],[]
         
     val_log = []
     min_val_loss = 10 #used for finding the minimum validation loss
