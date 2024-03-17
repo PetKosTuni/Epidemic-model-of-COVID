@@ -183,7 +183,7 @@ def get_region_list():
         with open("data/world_pop.json", 'r') as f:
             Nation_Pop = json.load(f)
 
-    return {'region_list': region_list, 'mid_dates': mid_dates, 'write_dir': write_dir, 'state': state, 'County_Pop': County_Pop, 'Nation_Pop': Nation_Pop}
+    return {'region_list': region_list, 'mid_dates': mid_dates, 'write_dir': write_dir, 'data': data, 'state': state, 'County_Pop': County_Pop, 'Nation_Pop': Nation_Pop}
 
 def generate_parameters(region, param_dict):
     """! The function creates a dictionary of variables, such as the a and decay parameters, to use when generating validation results.
@@ -195,6 +195,7 @@ def generate_parameters(region, param_dict):
     nation = 0
     state = param_dict['state']
     mid_dates = param_dict['mid_dates']
+    data = param_dict['data']
     if args.level == "state":
         state = str(region)
         df_Population = pd.read_csv('data/us_population.csv')
@@ -294,7 +295,7 @@ def generate_parameters(region, param_dict):
 
     return {'a': a, 'decay': decay, 'pop_in': pop_in, 'Pop': Pop, 'state': state,
              'train_data': train_data, 'reopen_flag': reopen_flag, 'full_data': full_data,
-               'val_data': val_data, 'second_start_date': second_start_date, 'nation': nation}
+               'val_data': val_data, 'start_date': start_date, 'second_start_date': second_start_date, 'nation': nation}
 
 def generate_validation_results(parameters, params_allregion, region):
     """! The function fills the params_allregion dictionary with validation results per region.
