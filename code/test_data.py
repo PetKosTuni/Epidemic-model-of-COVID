@@ -6,7 +6,7 @@ os.environ['DC_STATEHOOD'] = '1'
 import us
 
 
-from data import NYTimes, JHU_US, JHU_global, Hospital_CA, Hospital_US
+from data import *
 
 # This testing file contains unit tests for the data classes of data.py.
 # At time of writing, no clear test plan / framework has been decided, so I'll just write some
