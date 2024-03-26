@@ -9,11 +9,11 @@ import us
 
 from model import Learner_SuEIR
 from data import JHU_US, JHU_global, NYTimes
+from rolling_train_modified import rolling_train, rolling_prediction, rolling_likelihood
 from util import get_start_date
 from datetime import timedelta, datetime
 from matplotlib import pyplot as plt
 
-import rolling_train_modified as rtmod
 
 # Import hard coded dates, decays and "a" values.
 import prediction_data as pdata
@@ -356,11 +356,11 @@ for region in region_list:
     init = [N-E_0-data_confirm[0]-data_fatality[0], E_0, data_confirm[0], data_fatality[0]]
 
     # Get params_all list and loss_all.
-    params_all, loss_all = rtmod.rolling_train(model, init, train_data, new_sus, pop_in=pop_in)
+    params_all, loss_all = rolling_train(model, init, train_data, new_sus, pop_in=pop_in)
 
     # Get true loss and true prediction.
     loss_true = [NE0_region[region][-2], NE0_region[region][-1]]
-    pred_true = rtmod.rolling_prediction(model, init, params_all, full_data, new_sus, pred_range=prediction_range, pop_in=pop_in, daily_smooth=True)
+    pred_true = rolling_prediction(model, init, params_all, full_data, new_sus, pred_range=prediction_range, pop_in=pop_in, daily_smooth=True)
 
     confirm = full_data[0][0][0:-1].tolist() + full_data[1][0][0:-1].tolist() + pred_true[0].tolist()
 
@@ -374,7 +374,7 @@ for region in region_list:
     print ("region: ", region, " training loss: ",  \
         loss_all, loss_true," maximum death cases: ", int(pred_true[1][-1]), " maximum confirmed cases: ", int(pred_true[0][-1])) 
 
-    _, loss_true = rtmod.rolling_likelihood(model, init, params_all, train_data, new_sus, pop_in=pop_in)
+    _, loss_true = rolling_likelihood(model, init, params_all, train_data, new_sus, pop_in=pop_in)
     data_length = [len(data[0]) for data in train_data]
 
     # Add predictions to a list.
@@ -403,9 +403,9 @@ for region in region_list:
                             temp_param = [params_all[0]] + [params_all[1]] + [np.asarray([beta0,gamma0,sigma0,mu0])]
 
                         # Create temporary prediction using rolling_prediction.
-                        temp_pred = rtmod.rolling_prediction(model, init, temp_param, full_data, new_sus, pred_range=prediction_range, pop_in=pop_in, daily_smooth=True)
+                        temp_pred = rolling_prediction(model, init, temp_param, full_data, new_sus, pred_range=prediction_range, pop_in=pop_in, daily_smooth=True)
 
-                        _, loss = rtmod.rolling_likelihood(model, init, temp_param, train_data, new_sus, pop_in=pop_in)
+                        _, loss = rolling_likelihood(model, init, temp_param, train_data, new_sus, pop_in=pop_in)
 
                         if loss < (9.5/data_length[1]*4+loss_true): ###################### 95% tail probability of Chi square (4) distribution
                             prediction_list += [temp_pred]
