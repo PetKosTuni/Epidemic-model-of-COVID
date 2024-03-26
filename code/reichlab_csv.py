@@ -40,7 +40,7 @@ data = JHU_US(level="states")
 
 # Create list for US states and exclude non-state entities listed in nonstate_list.
 nonstate_list = ["American Samoa", "Diamond Princess", "Grand Princess", "Virgin Islands", "Northern Mariana Islands", "vermont"]
-state_list = ["US"]+[state for state in data.state_list if not state in nonstate_list]
+state_list = ["US"]+[state for state in data.state_list if state not in nonstate_list]
 
 
 prediction_range = 100
@@ -179,7 +179,7 @@ for state in state_list:
     new_sus = 0 if reopen_flag else 0
 
     # Add bias for states. If not state, set bias to 0.02.
-    if not state=="US":
+    if state != "US":
         # State bias.
         bias = 0.025 if reopen_flag or (state=="Louisiana" or state=="Washington" or state == "North Carolina" or state == "Mississippi") else 0.005
         if state == "Arizona" or state == "Alabama" or state == "Florida" or state=="Indiana" or state=="Wisconsin" or state == "Hawaii" or state == "California" or state=="Texas" or state=="Illinois":

@@ -76,11 +76,11 @@ def get_county_list(cc_limit=200, pop_limit=50000):
     for region in County_Pop.keys():
         county, state = region.split("_")
         # print(state)
-        if County_Pop[region][0]>=pop_limit and not state in non_county_list:        
+        if County_Pop[region][0]>=pop_limit and state not in non_county_list:        
             train_data = data.get("2020-03-22", args.END_DATE, state, county)
             confirm, death = train_data[0], train_data[1]
             start_date = get_start_date(train_data)
-            if len(death) >0 and np.max(death)>=0 and np.max(confirm)>cc_limit and start_date < "2020-05-10" and not county=="Lassen":
+            if len(death) > 0 and np.max(death) >=0 and np.max(confirm) > cc_limit and start_date < "2020-05-10" and county != "Lassen":
                 county_list += [region]
 
     return county_list
@@ -99,12 +99,12 @@ def get_region_list():
         # data = NYTimes(level='states')
         data = NYTimes(level='states') if args.dataset == "NYtimes" else JHU_US(level='states')
         nonstate_list = ["American Samoa", "Diamond Princess", "Grand Princess", "Virgin Islands", "Northern Mariana Islands"]
-        region_list = [state for state in data.state_list if not state in nonstate_list]
+        region_list = [state for state in data.state_list if state not in nonstate_list]
         # region_list = mid_dates_state.keys()
         # print(data.state_list)
         mid_dates = pdata.mid_dates_state
         write_dir = "val_results_state/" + args.dataset + "_" 
-        if not args.state == "default":
+        if args.state != "default":
             region_list = [args.state]  
             # region_list = ["New York", "California", "Illinois", "North Carolina", "Florida", "Texas", "Georgia", "Arizona", "South Carolina", "Alabama"]
             # region_list = ["New York", "California"]
@@ -120,10 +120,11 @@ def get_region_list():
         with open("data/county_pop.json", 'r') as f:
             County_Pop = json.load(f)       
 
-        if not args.state == "default" and not args.county == "default":
+        if args.state != "default" and args.county != "default":
             region_list = [args.county + "_" + args.state] 
             # region_list = ["New York_New York", "Los Angeles_California", "Dallas_Texas"] 
             write_dir = "val_results_county/test" + args.dataset + "_"
+
         else:
             region_list = get_county_list(cc_limit=2000, pop_limit=10)
             print("# feasible counties:", len(region_list))
@@ -134,9 +135,11 @@ def get_region_list():
         region_list = pdata.START_nation.keys()
         mid_dates = pdata.mid_dates_nation
         write_dir = "val_results_world/" + args.dataset + "_" 
-        if not args.nation == "default":
+
+        if args.nation != "default":
             region_list = [args.nation] 
             write_dir = "val_results_world/test" + args.dataset + "_" 
+
         with open("data/world_pop.json", 'r') as f:
             Nation_Pop = json.load(f)
 
@@ -196,7 +199,7 @@ def generate_parameters(region, param_dict):
         if state=="California" and county in mid_dates.keys():
             second_start_date = mid_dates[county]
             reopen_flag = True
-        elif state in pdata.mid_dates_state.keys() and not (state=="Arkansas" or state == "Montana"):
+        elif state in pdata.mid_dates_state.keys() and not (state == "Arkansas" or state == "Montana"):
             second_start_date = pdata.mid_dates_state[state]
             reopen_flag = True
         else:
@@ -291,7 +294,7 @@ def generate_validation_results(parameters, params_allregion, region):
                 pop_in = 0.01
         if args.level == "nation" and ( region=="Canada"):
             pop_in = 1/5000
-        if not args.level == "nation" and (state == "New York"):
+        if args.level != "nation" and (state == "New York"):
             pop_in = 1/5000
         if args.level == "nation" and (region == "Iran"):
             pop_in =  1/1000 

@@ -14,7 +14,6 @@ from util import get_start_date
 from datetime import timedelta, datetime
 from matplotlib import pyplot as plt
 
-
 # Import hard coded dates, decays and "a" values.
 import prediction_data as pdata
 
@@ -63,7 +62,7 @@ def get_county_list(cc_limit=200, pop_limit=50000):
         county, state = region.split("_")
 
         # Get data from counties exceeding the pop_limit given to the function.
-        if County_Pop[region][0]>=pop_limit and not state in non_county_list:        
+        if County_Pop[region][0]>=pop_limit and state not in non_county_list:        
             train_data = data.get("2020-03-22", args.END_DATE, state, county)
             confirm, death = train_data[0], train_data[1]
             start_date = get_start_date(train_data)
@@ -94,7 +93,7 @@ if args.level == "state":
     pred_dir = "pred_results_state/"
 
     # If data for certain state(s) is queried.
-    if not args.state == "default":
+    if args.state != "default":
         # Changes region_list two times. This is overridden later...
         region_list = [args.state]
         region_list = ["New York", "California"]
@@ -129,7 +128,7 @@ elif args.level == "nation":
     pred_dir = "pred_results_world/"
 
     # If data for certain nation(s) is queried.
-    if not args.nation == "default":
+    if args.nation != "default":
         # Add these nations to list and change the val_dir to .../test -> validation file starts with "test".
         region_list = [args.nation]
         val_dir = "val_results_world/test"
@@ -149,7 +148,7 @@ with open(json_file_name, 'r') as f:
 prediction_range = 100
 frame = []
 region_list = list(NE0_region.keys())
-region_list = [region for region in region_list if not region == "Independence, Arkansas"]
+region_list = [region for region in region_list if region != "Independence, Arkansas"]
 
 # Go through selected regions.
 for region in region_list:
@@ -304,7 +303,7 @@ for region in region_list:
             pop_in = 1/5000
 
         # If state is New York.
-        if not args.level == "nation" and (state == "New York"):
+        if args.level != "nation" and (state == "New York"):
             pop_in = 1/5000
 
         # If nation is Iran.
