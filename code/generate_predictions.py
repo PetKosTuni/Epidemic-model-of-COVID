@@ -7,12 +7,13 @@ import os
 os.environ['DC_STATEHOOD'] = '1'
 import us
 
-import model as modelpy
-import data as datapy
-import rolling_train_modified as rtmod
-import util
+from model import Learner_SuEIR
+from data import JHU_US, JHU_global, NYTimes
+from util import get_start_date
 from datetime import timedelta, datetime
 from matplotlib import pyplot as plt
+
+import rolling_train_modified as rtmod
 
 # Import hard coded dates, decays and "a" values.
 import prediction_data as pdata
@@ -50,7 +51,7 @@ def get_county_list(cc_limit=200, pop_limit=50000):
     non_county_list = ["Puerto Rico", "American Samoa", "Guam", "Northern Mariana Islands", "Virgin Islands"]
 
     # Create object for counties with data from NYTimes or JHU.
-    data = datapy.NYTimes(level='counties') if args.dataset == "NYtimes" else datapy.JHU_US(level='counties')
+    data = NYTimes(level='counties') if args.dataset == "NYtimes" else JHU_US(level='counties')
 
     # Load populations of US counties.
     with open("data/county_pop.json", 'r') as f:
@@ -65,7 +66,7 @@ def get_county_list(cc_limit=200, pop_limit=50000):
         if County_Pop[region][0]>=pop_limit and not state in non_county_list:        
             train_data = data.get("2020-03-22", args.END_DATE, state, county)
             confirm, death = train_data[0], train_data[1]
-            start_date = util.get_start_date(train_data)
+            start_date = get_start_date(train_data)
 
             # Add county to list if all of the following statements are true.
                 # There have been deaths on more than one day.
@@ -81,7 +82,7 @@ def get_county_list(cc_limit=200, pop_limit=50000):
 
 if args.level == "state":
     # Create object for states with data from NYTimes or JHU.
-    data = datapy.NYTimes(level='states') if args.dataset == "NYtimes" else datapy.JHU_US(level='states')
+    data = NYTimes(level='states') if args.dataset == "NYtimes" else JHU_US(level='states')
 
     # List of US territories and cruise ships not included in states.
     nonstate_list = ["American Samoa", "Diamond Princess", "Grand Princess", "Virgin Islands"]
@@ -106,7 +107,7 @@ elif args.level == "county":
     state = "California"
 
     # Create object for counties with data from NYTimes or JHU.
-    data = datapy.NYTimes(level='counties') if args.dataset == "NYtimes" else datapy.JHU_US(level='counties')
+    data = NYTimes(level='counties') if args.dataset == "NYtimes" else JHU_US(level='counties')
 
     # Get middle dates for different counties in California and initialize result directories.
     mid_dates = pdata.mid_dates_county
@@ -115,7 +116,7 @@ elif args.level == "county":
 
 elif args.level == "nation":
     # Create object for nations with data from JHU.
-    data = datapy.JHU_global()
+    data = JHU_global()
     # region_list = START_nation.keys()
 
     # Get middle dates for nations and load populations of nations.
@@ -157,7 +158,7 @@ for region in region_list:
         state = str(region)
 
         # Get start and middle dates for the state.
-        start_date = util.get_start_date(data.get("2020-03-22", args.END_DATE, state),100)
+        start_date = get_start_date(data.get("2020-03-22", args.END_DATE, state),100)
         mid_dates = pdata.mid_dates_state
         if state in mid_dates.keys():
             second_start_date = mid_dates[state]
@@ -196,7 +197,7 @@ for region in region_list:
         key = county + "_" + state
 
         # Get start and middle dates for the county.
-        start_date = util.get_start_date(data.get("2020-03-22", args.END_DATE, state, county))
+        start_date = get_start_date(data.get("2020-03-22", args.END_DATE, state, county))
         if state=="California" and county in mid_dates.keys():
             second_start_date = mid_dates[county]
             reopen_flag = True
@@ -351,7 +352,7 @@ for region in region_list:
     data_confirm, data_fatality = train_data[0][0], train_data[0][1]
 
     # Create model using Learner_SuEIR.
-    model = modelpy.Learner_SuEIR(N=N, E_0=E_0, I_0=data_confirm[0], R_0=data_fatality[0], a=a, decay=decay, bias=bias)
+    model = Learner_SuEIR(N=N, E_0=E_0, I_0=data_confirm[0], R_0=data_fatality[0], a=a, decay=decay, bias=bias)
     init = [N-E_0-data_confirm[0]-data_fatality[0], E_0, data_confirm[0], data_fatality[0]]
 
     # Get params_all list and loss_all.
