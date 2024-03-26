@@ -152,6 +152,9 @@ def generate_parameters(region, param_dict):
     @return A dictionary containing variables, which depend on whether a state, county or nation was chosen.
     """
 
+    # Initialize full_data.
+    full_data = 0
+
     nation = 0
     state = param_dict['state']
     mid_dates = param_dict['mid_dates']
@@ -254,8 +257,8 @@ def generate_parameters(region, param_dict):
         a, decay = pdata.FR_nation[nation]
 
     return {'a': a, 'decay': decay, 'pop_in': pop_in, 'Pop': Pop, 'state': state,
-             'train_data': train_data, 'reopen_flag': reopen_flag, 'full_data': full_data,
-               'val_data': val_data, 'start_date': start_date, 'second_start_date': second_start_date, 'nation': nation}
+             'train_data': train_data, 'reopen_flag': reopen_flag, 'val_data': val_data,
+             'full_data': full_data, 'start_date': start_date, 'second_start_date': second_start_date, 'nation': nation}
 
 def generate_validation_results(parameters, params_allregion, region):
     """! The function fills the params_allregion dictionary with validation results per region.
