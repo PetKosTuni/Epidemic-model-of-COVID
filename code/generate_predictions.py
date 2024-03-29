@@ -7,11 +7,15 @@ import os
 os.environ['DC_STATEHOOD'] = '1'
 import us
 
-from model import *
-from data import *
-from rolling_train_modified import *
-from util import *
+from model import Learner_SuEIR
+from data import JHU_US, JHU_global, NYTimes
+from rolling_train_modified import rolling_train, rolling_prediction, rolling_likelihood
+from util import get_start_date
 from datetime import timedelta, datetime
+from matplotlib import pyplot as plt
+
+# Import hard coded dates, decays and "a" values.
+import prediction_data as pdata
 
 parser = argparse.ArgumentParser(description='validation of prediction performance for all states')
 parser.add_argument('--END_DATE', default = "default",
@@ -33,6 +37,7 @@ PRED_START_DATE = args.VAL_END_DATE
 
 print(args)
 
+<<<<<<< HEAD
 # Starting dates for predictions for different countries.
 START_nation = {"Brazil": "2020-03-30", "Canada": "2020-03-28", "Mexico": "2020-03-30", \
  "India": "2020-03-28", "Turkey": "2020-03-22", "Russia": "2020-04-01", "Saudi Arabia": "2020-03-28", "US": "2020-03-22", \
@@ -84,6 +89,8 @@ mid_dates_nation = {"US": "2020-06-15", "Mexico": "2020-07-05", "India": "2020-0
 
 # Counties in Northern California. NOT USED ON THIS FILE.
 north_cal = ["Santa Clara", "San Mateo", "Alameda", "Contra Costa", "Sacramento", "San Joaquin", "Fresno"]
+=======
+>>>>>>> 0efa64f9bfef8912d222c3791ef16f856fe5fb65
 
 def get_county_list(cc_limit=200, pop_limit=50000):
     """! Function to get a list of all counties based on specific criteria.
@@ -114,7 +121,7 @@ def get_county_list(cc_limit=200, pop_limit=50000):
         county, state = region.split("_")
 
         # Get data from counties exceeding the pop_limit given to the function.
-        if County_Pop[region][0]>=pop_limit and not state in non_county_list:        
+        if County_Pop[region][0]>=pop_limit and state not in non_county_list:        
             train_data = data.get("2020-03-22", args.END_DATE, state, county)
             confirm, death = train_data[0], train_data[1]
             start_date = get_start_date(train_data)
@@ -144,12 +151,12 @@ if args.level == "state":
     # region_list = [state for state in data.state_list if not state in nonstate_list]
 
     # Get middle dates for different US states and initialize result directories.
-    mid_dates = mid_dates_state
+    mid_dates = pdata.mid_dates_state
     val_dir = "val_results_state/"
     pred_dir = "pred_results_state/"
 
     # If data for certain state(s) is queried.
-    if not args.state == "default":
+    if args.state != "default":
         # Changes region_list two times. This is overridden later...
         region_list = [args.state]
         region_list = ["New York", "California"]
@@ -171,7 +178,7 @@ elif args.level == "county":
         data = JHU_US(level='counties')
 
     # Get middle dates for different counties in California and initialize result directories.
-    mid_dates = mid_dates_county
+    mid_dates = pdata.mid_dates_county
     val_dir = "val_results_county/" 
     pred_dir = "pred_results_county/"
 
@@ -185,7 +192,7 @@ elif args.level == "nation":
     # region_list = START_nation.keys()
 
     # Get middle dates for nations and load populations of nations.
-    mid_dates = mid_dates_nation
+    mid_dates = pdata.mid_dates_nation
     with open("data/world_pop.json", 'r') as f:
         Nation_Pop = json.load(f)
 
@@ -194,7 +201,7 @@ elif args.level == "nation":
     pred_dir = "pred_results_world/"
 
     # If data for certain nation(s) is queried.
-    if not args.nation == "default":
+    if args.nation != "default":
         # Add these nations to list and change the val_dir to .../test -> validation file starts with "test".
         region_list = [args.nation]
         val_dir = "val_results_world/test"
@@ -212,7 +219,7 @@ with open(json_file_name, 'r') as f:
 prediction_range = 100
 frame = []
 region_list = list(NE0_region.keys())
-region_list = [region for region in region_list if not region == "Independence, Arkansas"]
+region_list = [region for region in region_list if region != "Independence, Arkansas"]
 
 # Go through selected regions.
 for region in region_list:
@@ -222,7 +229,7 @@ for region in region_list:
 
         # Get start and middle dates for the state.
         start_date = get_start_date(data.get("2020-03-22", args.END_DATE, state),100)
-        mid_dates = mid_dates_state
+        mid_dates = pdata.mid_dates_state
         if state in mid_dates.keys():
             second_start_date = mid_dates[state]
             reopen_flag = True
@@ -238,7 +245,7 @@ for region in region_list:
         # If state is in mid_dates_state list, include resurged start dates.
         if state in mid_dates.keys():
             # Use resurged start date if state is in mid_dates_state_resurge list. Otherwise, use 2020-09-15.
-            resurge_start_date = mid_dates_state_resurge[state] if state in mid_dates_state_resurge.keys() else "2020-09-15"
+            resurge_start_date = pdata.mid_dates_state_resurge[state] if state in pdata.mid_dates_state_resurge.keys() else "2020-09-15"
 
             train_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, resurge_start_date, state), \
              data.get(resurge_start_date, args.END_DATE, state)]
@@ -246,8 +253,8 @@ for region in region_list:
              data.get(resurge_start_date, PRED_START_DATE, state)]
 
         # Use given decay and a value for the state. Otherwise, use values default values.
-        if state in decay_state.keys():
-            a, decay = decay_state[state][0], decay_state[state][1]
+        if state in pdata.decay_state.keys():
+            a, decay = pdata.decay_state[state][0], pdata.decay_state[state][1]
 
         else:
             a, decay = 0.7, 0.3
@@ -265,8 +272,8 @@ for region in region_list:
             second_start_date = mid_dates[county]
             reopen_flag = True
 
-        elif state in mid_dates_state.keys():
-            second_start_date = mid_dates_state[state]
+        elif state in pdata.mid_dates_state.keys():
+            second_start_date = pdata.mid_dates_state[state]
             reopen_flag = True
 
         else:
@@ -278,9 +285,9 @@ for region in region_list:
         full_data = [data.get(start_date, second_start_date, state, county), data.get(second_start_date, PRED_START_DATE, state, county)]
 
         # If county's state is in mid_dates_state list, include resurged start dates.
-        if state in mid_dates_state.keys():
+        if state in pdata.mid_dates_state.keys():
             # Use resurged start date if state is in mid_dates_state_resurge list. Otherwise, use 2020-09-15.
-            resurge_start_date = mid_dates_state_resurge[state] if state in mid_dates_state_resurge.keys() else "2020-09-15"
+            resurge_start_date = pdata.mid_dates_state_resurge[state] if state in pdata.mid_dates_state_resurge.keys() else "2020-09-15"
 
             train_data = [data.get(start_date, second_start_date, state, county), data.get(second_start_date, resurge_start_date, state, county), \
              data.get(resurge_start_date, args.END_DATE, state, county)]
@@ -288,8 +295,8 @@ for region in region_list:
              data.get(resurge_start_date, PRED_START_DATE, state, county)]
 
         # Use given decay and a value for the county's state. Otherwise, use values default values.
-        if state in decay_state.keys():
-            a, decay = decay_state[state][0], decay_state[state][1]
+        if state in pdata.decay_state.keys():
+            a, decay = pdata.decay_state[state][0], pdata.decay_state[state][1]
             
         else:
             a, decay = 0.7, 0.32
@@ -301,7 +308,7 @@ for region in region_list:
         nation = str(region)
 
         # Get start and middle dates for the nation.
-        if nation in mid_dates_nation.keys():
+        if nation in pdata.mid_dates_nation.keys():
             second_start_date = mid_dates[nation]
             reopen_flag = True
 
@@ -313,7 +320,7 @@ for region in region_list:
             second_start_date = "2020-06-12"
             reopen_flag = False
 
-        start_date = START_nation[nation]
+        start_date = pdata.START_nation[nation]
 
         # Get data from the nation for training and full result.
         train_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, args.END_DATE, nation)]
@@ -325,7 +332,7 @@ for region in region_list:
             full_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, "2020-09-15", nation), data.get("2020-09-15", PRED_START_DATE, nation)]
 
         # Use given decay and a value for the nation.
-        a, decay = FR_nation[nation] 
+        a, decay = pdata.FR_nation[nation] 
         pop_in = 1/400 if nation == "US" else 1/400
 
     # determine the parameters including pop_in, N and E_0
@@ -366,7 +373,7 @@ for region in region_list:
             pop_in = 1/5000
 
         # If state is New York.
-        if not args.level == "nation" and (state == "New York"):
+        if args.level != "nation" and (state == "New York"):
             pop_in = 1/5000
 
         # If nation is Iran.
@@ -467,7 +474,7 @@ for region in region_list:
                             temp_param = [params_all[0]] + [params_all[1]] + [np.asarray([beta0,gamma0,sigma0,mu0])]
 
                         # Create temporary prediction using rolling_prediction.
-                        temp_pred=rolling_prediction(model, init, temp_param, full_data, new_sus, pred_range=prediction_range, pop_in=pop_in, daily_smooth=True)
+                        temp_pred = rolling_prediction(model, init, temp_param, full_data, new_sus, pred_range=prediction_range, pop_in=pop_in, daily_smooth=True)
 
                         _, loss = rolling_likelihood(model, init, temp_param, train_data, new_sus, pop_in=pop_in)
 
