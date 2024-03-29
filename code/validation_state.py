@@ -164,47 +164,6 @@ def get_region_list():
             # region_list = ["New York", "California", "Illinois", "North Carolina", "Florida", "Texas", "Georgia", "Arizona", "South Carolina", "Alabama"]
             # region_list = ["New York", "California"]
             write_dir = "val_results_state/test" + args.dataset + "_"
-        
-    elif args.level == "county":
-        state = "California"
-        # data = NYTimes(level='counties')
-
-        if args.dataset == "NYtimes":
-            data = NYTimes(level='counties')
-        # elif args.dataset == "OWN_DATASET":
-        #   data = OWN_DATASET(args)
-        else:
-            data = JHU_US(level='counties')
-        
-        # region_list = mid_dates_county.keys()
-        # region_list = ["Cochise_Arizona"]
-        mid_dates = mid_dates_county
-        with open("data/county_pop.json", 'r') as f:
-            County_Pop = json.load(f)       
-
-        if not args.state == "default" and not args.county == "default":
-            region_list = [args.county + "_" + args.state] 
-            # region_list = ["New York_New York", "Los Angeles_California", "Dallas_Texas"] 
-            write_dir = "val_results_county/test" + args.dataset + "_"
-        else:
-            region_list = get_county_list(cc_limit=2000, pop_limit=10)
-            print("# feasible counties:", len(region_list))
-            write_dir = "val_results_county/" + args.dataset + "_"
-
-    elif args.level == "nation":
-        
-        data = JHU_global()
-        # if args.dataset == "OWN_DATASET":
-        #    data = OWN_DATASET(args)
-
-        region_list = START_nation.keys()
-        mid_dates = mid_dates_nation
-        write_dir = "val_results_world/" + args.dataset + "_" 
-        if not args.nation == "default":
-            region_list = [args.nation] 
-            write_dir = "val_results_world/test" + args.dataset + "_" 
-        with open("data/world_pop.json", 'r') as f:
-            Nation_Pop = json.load(f)
 
     return {'region_list': region_list, 'mid_dates': mid_dates, 'write_dir': write_dir, 'data': data, 'state': state, 'County_Pop': County_Pop, 'Nation_Pop': Nation_Pop}
 
@@ -219,6 +178,7 @@ def generate_parameters(region, param_dict):
     state = param_dict['state']
     mid_dates = param_dict['mid_dates']
     data = param_dict['data']
+
     if args.level == "state":
         state = str(region)
         df_Population = pd.read_csv('data/us_population.csv')
@@ -250,71 +210,6 @@ def generate_parameters(region, param_dict):
         pop_in = 1/400
         if state == "California":
             pop_in = 0.01
-            
-    elif args.level == "county":
-        county, state = region.split("_")
-        region = county + ", " + state
-        key = county + "_" + state
-
-        County_Pop = param_dict['County_Pop']
-        Pop=County_Pop[key][0]
-        start_date = get_start_date(data.get("2020-03-22", args.END_DATE, state, county))
-        if state=="California" and county in mid_dates.keys():
-            second_start_date = mid_dates[county]
-            reopen_flag = True
-        elif state in mid_dates_state.keys() and not (state=="Arkansas" or state == "Montana"):
-            second_start_date = mid_dates_state[state]
-            reopen_flag = True
-        else:
-            second_start_date = "2020-08-30"
-            reopen_flag = False
-
-        if start_date < "2020-05-10":
-            train_data = [data.get(start_date, second_start_date, state, county), data.get(second_start_date, args.END_DATE, state, county)]
-        else:
-            train_data = [data.get(start_date, args.END_DATE, state, county)]
-        val_data = data.get(args.END_DATE, args.VAL_END_DATE, state, county)
-        if state in decay_state.keys():
-            a, decay = decay_state[state][0], decay_state[state][1]
-        else:
-            a, decay = 0.7, 0.32
-        if county in north_cal and state=="California":
-            decay = 0.03
-        pop_in = 1/400
-
-        if state in mid_dates_state.keys():
-            resurge_start_date = mid_dates_state_resurge[state] if state in mid_dates_state_resurge.keys() else "2020-09-15"
-            train_data = [data.get(start_date, second_start_date, state, county), data.get(second_start_date, resurge_start_date, state, county), \
-                data.get(resurge_start_date, args.END_DATE, state, county)]
-            full_data = [data.get(start_date, second_start_date, state, county), data.get(second_start_date, resurge_start_date, state, county), \
-                data.get(resurge_start_date, args.VAL_END_DATE, state, county)]
-
-    elif args.level == "nation":
-        nation = str(region)
-        Nation_Pop = param_dict['Nation_Pop']
-        Pop = Nation_Pop["United States"] if nation == "US" else Nation_Pop[nation]
-        if nation in mid_dates_nation.keys():
-            second_start_date = mid_dates[nation]
-            reopen_flag = True
-        elif nation == "Turkey":
-            second_start_date = "2020-06-07"
-            reopen_flag = False
-        else:
-            second_start_date = "2020-07-30"
-            reopen_flag = False
-        pop_in = 1/2000 if nation == "Germany" else 1/400
-
-        start_date = START_nation[nation]
-        train_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, args.END_DATE, nation)]
-        full_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, args.END_DATE, nation)]
-
-        if nation=="US":
-            resurge_start_date = "2020-09-15"
-            train_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, resurge_start_date, nation), data.get(resurge_start_date, args.END_DATE, nation)]
-            full_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, resurge_start_date, nation), data.get(resurge_start_date, args.END_DATE, nation)]
-
-        val_data = data.get(args.END_DATE, args.VAL_END_DATE, nation)
-        a, decay = FR_nation[nation]
 
     return {'a': a, 'decay': decay, 'pop_in': pop_in, 'Pop': Pop, 'state': state,
              'train_data': train_data, 'reopen_flag': reopen_flag, 'full_data': full_data,
@@ -355,14 +250,6 @@ def generate_validation_results(parameters, params_allregion, region):
             pop_in = 1/500
             if state == "California":
                 pop_in = 0.01
-        if args.level == "nation" and ( region=="Canada"):
-            pop_in = 1/5000
-        if not args.level == "nation" and (state == "New York"):
-            pop_in = 1/5000
-        if args.level == "nation" and (region == "Iran"):
-            pop_in =  1/1000 
-        if args.level == "nation" and (region == "US"):
-            pop_in = 1/400
         if args.popin >0:
             pop_in = args.popin
     
@@ -376,15 +263,6 @@ def generate_validation_results(parameters, params_allregion, region):
     if args.level == "county":
         rs = np.asarray([30,  40, 50, 60, 70, 80,  90, 100, 120, 150, 200, 400])
         # rs = np.asarray([200])
-
-    if args.level == "nation":
-
-        if region == "South Africa" :
-            rs *= 4
-        if region == "India" or region == "Qatar":
-            rs *= 4
-        if region == "Argentina" :
-            rs *= 4
 
     A_inv, I_inv, R_inv, loss_list0, loss_list1, params_list, learner_list, I_list = [],[],[],[],[],[],[],[]
         
@@ -403,14 +281,7 @@ def generate_validation_results(parameters, params_allregion, region):
                 if state == "Arkansas" or state == "Iowa" or state == "Minnesota" or state == "Louisiana" \
                     or state == "Nevada" or state == "Kansas" or state=="Kentucky" or state == "Tennessee" or state == "West Virginia":
                     bias = 0.05
-            if args.level == "nation":
 
-                bias = 0.02 if reopen_flag else 0.01
-                nation = parameters['nation']
-                if nation == "Germany":
-                    bias = 0.02
-                if nation == "US":
-                    bias = 0.02
             data_confirm, data_fatality = train_data[0][0], train_data[0][1]
             # print (bias)
             model = Learner_SuEIR(N=N, E_0=E_0, I_0=data_confirm[0], R_0=data_fatality[0], a=parameters['a'], decay=parameters['decay'], bias=bias)

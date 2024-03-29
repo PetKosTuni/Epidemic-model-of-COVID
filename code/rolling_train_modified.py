@@ -5,7 +5,7 @@ from data import NYTimes, Hospital_US, JHU_global
 from matplotlib import pyplot as plt
 from util import ensure_float64
 
-# This file constains modified functions for model training and predicting data from the rolling_train.py -file.
+# This file consists of modified functions for model training and predicting data from the rolling_train.py -file.
 
 def loss(pred, target, smoothing=10): 
     """! Mean squared logarithmic error (MSLE) -function for calculating loss for training model.

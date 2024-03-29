@@ -31,9 +31,17 @@ class Data(object):
         warnings.warn('Data get method does not implement')
         raise NotImplementedError
 
+# When implementing your own datasets, uncomment the class below and copy paste as many as you need.
+# Every class is its own dataset. The type of functions required depend on the format of the dataset,
+# but to work nicely the date_range- and get-functions have to be implemented like the ready datasets
+# below. The dataset can include either US county, US-state or country data. CSV-files would be the
+# easiest way, by including them into the data folder, as done with the ready datasets (NYtimes etc).
+# Remember to rename the dataset here, and replace the commented OWN_DATASETs in the validation.py
+# and generate_predictions.py -files.
+
 '''
 Inherit the Data Object:
-class xxx(Data):
+class OWN_DATASET(Data):
     def __init__(self):
         pass
     def data_range(self, start_date, end_date):
@@ -41,6 +49,36 @@ class xxx(Data):
     def get(self, start_date, end_date):
         pass
 '''
+
+class DATASET_template(Data):
+    def __init__(self, level, url):
+
+        self.level = level
+        self.table = pd.read_csv(url)
+
+        if level == "state":
+            self.state_list = self.table["state"].unique()
+        
+    def data_range(self):
+        
+        date = pd.to_datetime(self.table.iloc[1:].index).date
+        start = str(date[0])
+        end = str(date[-1])
+        return start, end
+    
+    def get(self, start_date, end_date, region):
+
+        csv_data = self.table[region]
+        date = pd.to_datetime(self.confirm_table.index[1:], format="%m/%d/%y")
+        start = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+        end = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+        if self.level == 'counties':
+            data = csv_data.loc[(date >= start) & (date <= end)]
+        elif self.level == 'state':
+            data = csv_data.loc[(date >= start) & (date <= end)]
+        else:
+            data = csv_data.loc[(date >= start) & (date <= end)]
+        return data
 
 class NYTimes(Data):
     """! Class for NYTimes dataset, inherits the Data base class. Data in the dataset is available 

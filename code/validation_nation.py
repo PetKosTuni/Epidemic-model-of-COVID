@@ -144,54 +144,8 @@ def get_region_list():
     Nation_Pop = 0
     # initial the dataloader, get region list 
     # get the directory of output validation files
-    if args.level == "state":
-        
-        if args.dataset == "NYtimes":
-            data = NYTimes(level='states')
-        # elif args.dataset == "OWN_DATASET":
-        #   data = OWN_DATASET(args)
-        else:
-            data = JHU_US(level='states')
 
-        nonstate_list = ["American Samoa", "Diamond Princess", "Grand Princess", "Virgin Islands", "Northern Mariana Islands"]
-        region_list = [state for state in data.state_list if not state in nonstate_list]
-        # region_list = mid_dates_state.keys()
-        # print(data.state_list)
-        mid_dates = mid_dates_state
-        write_dir = "val_results_state/" + args.dataset + "_" 
-        if not args.state == "default":
-            region_list = [args.state]  
-            # region_list = ["New York", "California", "Illinois", "North Carolina", "Florida", "Texas", "Georgia", "Arizona", "South Carolina", "Alabama"]
-            # region_list = ["New York", "California"]
-            write_dir = "val_results_state/test" + args.dataset + "_"
-        
-    elif args.level == "county":
-        state = "California"
-        # data = NYTimes(level='counties')
-
-        if args.dataset == "NYtimes":
-            data = NYTimes(level='counties')
-        # elif args.dataset == "OWN_DATASET":
-        #   data = OWN_DATASET(args)
-        else:
-            data = JHU_US(level='counties')
-        
-        # region_list = mid_dates_county.keys()
-        # region_list = ["Cochise_Arizona"]
-        mid_dates = mid_dates_county
-        with open("data/county_pop.json", 'r') as f:
-            County_Pop = json.load(f)       
-
-        if not args.state == "default" and not args.county == "default":
-            region_list = [args.county + "_" + args.state] 
-            # region_list = ["New York_New York", "Los Angeles_California", "Dallas_Texas"] 
-            write_dir = "val_results_county/test" + args.dataset + "_"
-        else:
-            region_list = get_county_list(cc_limit=2000, pop_limit=10)
-            print("# feasible counties:", len(region_list))
-            write_dir = "val_results_county/" + args.dataset + "_"
-
-    elif args.level == "nation":
+    if args.level == "nation":
         
         data = JHU_global()
         # if args.dataset == "OWN_DATASET":
@@ -219,77 +173,8 @@ def generate_parameters(region, param_dict):
     state = param_dict['state']
     mid_dates = param_dict['mid_dates']
     data = param_dict['data']
-    if args.level == "state":
-        state = str(region)
-        df_Population = pd.read_csv('data/us_population.csv')
-        print(state)
-        Pop=df_Population[df_Population['STATE']==state]["Population"].to_numpy()[0]
-        start_date = get_start_date(data.get("2020-03-22", args.END_DATE, state),100)
-        if state in mid_dates.keys():
-            second_start_date = mid_dates[state]
-            train_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, args.END_DATE, state)]
-            reopen_flag = True
-        else:
-            second_start_date = "2020-08-30"
-            train_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, args.END_DATE, state)]
-            reopen_flag = False
 
-        if state in mid_dates.keys():
-            resurge_start_date = mid_dates_state_resurge[state] if state in mid_dates_state_resurge.keys() else "2020-09-15"
-            train_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, resurge_start_date, state), \
-                data.get(resurge_start_date, args.END_DATE, state)]
-            full_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, resurge_start_date, state), \
-                data.get(resurge_start_date, args.VAL_END_DATE, state)]
-
-        val_data = data.get(args.END_DATE, args.VAL_END_DATE, state)
-        if state in decay_state.keys():
-            a, decay = decay_state[state][0], decay_state[state][1]
-        else:
-            a, decay = 0.7, 0.3          
-        # will rewrite it using json
-        pop_in = 1/400
-        if state == "California":
-            pop_in = 0.01
-            
-    elif args.level == "county":
-        county, state = region.split("_")
-        region = county + ", " + state
-        key = county + "_" + state
-
-        County_Pop = param_dict['County_Pop']
-        Pop=County_Pop[key][0]
-        start_date = get_start_date(data.get("2020-03-22", args.END_DATE, state, county))
-        if state=="California" and county in mid_dates.keys():
-            second_start_date = mid_dates[county]
-            reopen_flag = True
-        elif state in mid_dates_state.keys() and not (state=="Arkansas" or state == "Montana"):
-            second_start_date = mid_dates_state[state]
-            reopen_flag = True
-        else:
-            second_start_date = "2020-08-30"
-            reopen_flag = False
-
-        if start_date < "2020-05-10":
-            train_data = [data.get(start_date, second_start_date, state, county), data.get(second_start_date, args.END_DATE, state, county)]
-        else:
-            train_data = [data.get(start_date, args.END_DATE, state, county)]
-        val_data = data.get(args.END_DATE, args.VAL_END_DATE, state, county)
-        if state in decay_state.keys():
-            a, decay = decay_state[state][0], decay_state[state][1]
-        else:
-            a, decay = 0.7, 0.32
-        if county in north_cal and state=="California":
-            decay = 0.03
-        pop_in = 1/400
-
-        if state in mid_dates_state.keys():
-            resurge_start_date = mid_dates_state_resurge[state] if state in mid_dates_state_resurge.keys() else "2020-09-15"
-            train_data = [data.get(start_date, second_start_date, state, county), data.get(second_start_date, resurge_start_date, state, county), \
-                data.get(resurge_start_date, args.END_DATE, state, county)]
-            full_data = [data.get(start_date, second_start_date, state, county), data.get(second_start_date, resurge_start_date, state, county), \
-                data.get(resurge_start_date, args.VAL_END_DATE, state, county)]
-
-    elif args.level == "nation":
+    if args.level == "nation":
         nation = str(region)
         Nation_Pop = param_dict['Nation_Pop']
         Pop = Nation_Pop["United States"] if nation == "US" else Nation_Pop[nation]
@@ -351,10 +236,6 @@ def generate_validation_results(parameters, params_allregion, region):
                 pop_in = 1/500
             else:
                 pop_in = 1/1000
-        if args.level=="state" and reopen_flag and (np.mean(daily_confirm[-7:])<12.5 or mean_increase<1.1):
-            pop_in = 1/500
-            if state == "California":
-                pop_in = 0.01
         if args.level == "nation" and ( region=="Canada"):
             pop_in = 1/5000
         if not args.level == "nation" and (state == "New York"):
@@ -396,13 +277,7 @@ def generate_validation_results(parameters, params_allregion, region):
 
             # In order to simulate the reopen, we assume at the second stage, there are N new suspectible individuals
             new_sus = 0 if reopen_flag else 0
-            if args.level == "state" or args.level == "county":
-                bias = 0.025 if reopen_flag or (state=="Louisiana" or state=="Washington" or state == "North Carolina" or state == "Mississippi") else 0.005
-                if state == "Arizona" or state == "Alabama" or state == "Florida" or state=="Indiana" or state=="Wisconsin" or state == "Hawaii" or state == "California" or state=="Texas" or state=="Illinois":
-                    bias = 0.01
-                if state == "Arkansas" or state == "Iowa" or state == "Minnesota" or state == "Louisiana" \
-                    or state == "Nevada" or state == "Kansas" or state=="Kentucky" or state == "Tennessee" or state == "West Virginia":
-                    bias = 0.05
+
             if args.level == "nation":
 
                 bias = 0.02 if reopen_flag else 0.01

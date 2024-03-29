@@ -31,7 +31,6 @@ parser.add_argument('--popin', type=float, default = 0,
 args = parser.parse_args()
 PRED_START_DATE = args.VAL_END_DATE
 
-
 print(args)
 
 # Starting dates for predictions for different countries.
@@ -86,7 +85,6 @@ mid_dates_nation = {"US": "2020-06-15", "Mexico": "2020-07-05", "India": "2020-0
 # Counties in Northern California. NOT USED ON THIS FILE.
 north_cal = ["Santa Clara", "San Mateo", "Alameda", "Contra Costa", "Sacramento", "San Joaquin", "Fresno"]
 
-
 def get_county_list(cc_limit=200, pop_limit=50000):
     """! Function to get a list of all counties based on specific criteria.
     @param cc_limit Minimum number of confirmed cases for a county to be included.
@@ -97,8 +95,14 @@ def get_county_list(cc_limit=200, pop_limit=50000):
     # List of US territories that are not included in counties.
     non_county_list = ["Puerto Rico", "American Samoa", "Guam", "Northern Mariana Islands", "Virgin Islands"]
 
-    # Create object for counties with data from NYTimes or JHU.
-    data = NYTimes(level='counties') if args.dataset == "NYtimes" else JHU_US(level='counties')
+    # Create object for counties with data from NYTimes or JHU (or own dataset).
+
+    if args.dataset == "NYtimes":
+        data = NYTimes(level='counties')
+    # elif args.dataset == "OWN_DATASET":
+    #   data = OWN_DATASET(args)
+    else:
+        data = JHU_US(level='counties')
 
     # Load populations of US counties.
     with open("data/county_pop.json", 'r') as f:
@@ -125,11 +129,15 @@ def get_county_list(cc_limit=200, pop_limit=50000):
 
     return county_list
 
-
-
 if args.level == "state":
-    # Create object for states with data from NYTimes or JHU.
-    data = NYTimes(level='states') if args.dataset == "NYtimes" else JHU_US(level='states')
+    # Create object for states with data from NYTimes or JHU (or own dataset).
+
+    if args.dataset == "NYtimes":
+        data = NYTimes(level='states')
+    # elif args.dataset == "OWN_DATASET":
+    #   data = OWN_DATASET(args)
+    else:
+        data = JHU_US(level='states')
 
     # List of US territories and cruise ships not included in states.
     nonstate_list = ["American Samoa", "Diamond Princess", "Grand Princess", "Virgin Islands"]
@@ -153,8 +161,14 @@ elif args.level == "county":
     # State is California as middle dates are given to different Californian counties.
     state = "California"
 
-    # Create object for counties with data from NYTimes or JHU.
-    data = NYTimes(level='counties') if args.dataset == "NYtimes" else JHU_US(level='counties')
+    # Create object for counties with data from NYTimes or JHU (or own dataset).
+
+    if args.dataset == "NYtimes":
+        data = NYTimes(level='counties')
+    # elif args.dataset == "OWN_DATASET":
+    #   data = OWN_DATASET(args)
+    else:
+        data = JHU_US(level='counties')
 
     # Get middle dates for different counties in California and initialize result directories.
     mid_dates = mid_dates_county
@@ -163,7 +177,11 @@ elif args.level == "county":
 
 elif args.level == "nation":
     # Create object for nations with data from JHU.
+
     data = JHU_global()
+    # if args.dataset == "OWN_DATASET":
+        #    data = OWN_DATASET(args)
+    
     # region_list = START_nation.keys()
 
     # Get middle dates for nations and load populations of nations.
@@ -185,8 +203,6 @@ elif args.level == "nation":
 json_file_name = val_dir + args.dataset + "_" + "val_params_best_END_DATE_" + args.END_DATE + "_VAL_END_DATE_" + args.VAL_END_DATE
 if not os.path.exists(json_file_name):
     json_file_name = val_dir + "JHU" + "_" + "val_params_best_END_DATE_" + args.END_DATE + "_VAL_END_DATE_" + args.VAL_END_DATE
-
-
 
 # Open the validation file.
 with open(json_file_name, 'r') as f:
@@ -312,7 +328,6 @@ for region in region_list:
         a, decay = FR_nation[nation] 
         pop_in = 1/400 if nation == "US" else 1/400
 
-
     # determine the parameters including pop_in, N and E_0
     mean_increase = 0
     if len(train_data)>1:
@@ -370,7 +385,6 @@ for region in region_list:
         " end date: ", args.END_DATE, " Validation end date: ", args.VAL_END_DATE, "mean increase: ", mean_increase, pop_in )   
     N, E_0 = NE0_region[region][0], NE0_region[region][1]
 
-    
     new_sus = 0 if reopen_flag else 0
     if args.level == "state" or args.level == "county":
         # Use 0.025 as bias if state is one listed or if the state or county is included in middle dates list. 
@@ -414,9 +428,12 @@ for region in region_list:
     # Plot results.
     plt.figure()
     plt.plot(np.diff(np.array(confirm)))
+    plt.xlabel('Days')
+    plt.ylabel('Confirmed cases')
+    plt.title('Daily increase of confirmed cases in ' + region)
+    plt.legend(labels = ['Confirmed cases'])
     plt.savefig("figure_"+args.level+"/daily_increase_"+region+".pdf")
     plt.close()
-
 
     print ("region: ", region, " training loss: ",  \
         loss_all, loss_true," maximum death cases: ", int(pred_true[1][-1]), " maximum confirmed cases: ", int(pred_true[0][-1])) 
