@@ -43,7 +43,7 @@ python validation.py --END_DATE 2021-07-07 --VAL_END_DATE 2021-07-14  --dataset 
 
 Step 2: Generate prediction results by running ```generate_predictions.py```, e.g.,
 ```python
-python generate_predictions.py --END_DATE 2020-07-07 --VAL_END_DATE 2020-07-14 --dataset NYtimes --level state
+python generate_predictions.py --END_DATE 2021-07-07 --VAL_END_DATE 2021-07-14 --dataset NYtimes --level state
 ```
 Before runing ```generate_predictions.py```, one should make sure the corresponding validation file, i.e., with the same ```END_DATE```, ```VAL_END_DATE```, ```dataset```, and ```level```, has already be generated.
 
