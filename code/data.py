@@ -56,30 +56,35 @@ class DATASET_template(Data):
         self.level = level
         self.table = pd.read_csv(url)
 
-        if level == "state":
+        if level == "state" or level == "counties":
             self.state_list = self.table["state"].unique()
         
     def data_range(self):
         
-        date = pd.to_datetime(self.table.iloc[1:].index).date
-        start = str(date[0])
-        end = str(date[-1])
-        return start, end
+        dates = pd.to_datetime(self.table['date'], format='%Y-%m-%d').dt.date.to_numpy()
+        return dates[-1], dates[0]
     
-    def get(self, start_date, end_date, region):
+    def get(self, start_date, end_date, data_type, state = None, county = None):
 
-        csv_data = self.table[region]
-        date = pd.to_datetime(self.confirm_table.index[1:], format="%m/%d/%y")
+        if self.level == 'states':
+            state_table = self.table[self.table['state']
+                            == us.states.lookup(state).name]
+            tab = state_table
+
+        elif self.level == 'counties':
+            state_table = self.table[self.table['state']
+                            == us.states.lookup(state).name]
+            
+            tab = state_table[state_table['county'] == county]
+        else:
+            tab = self.table
+        
+        date = pd.to_datetime(tab['date'])
         start = datetime.datetime.strptime(start_date, '%Y-%m-%d')
         end = datetime.datetime.strptime(end_date, '%Y-%m-%d')
-        if self.level == 'counties':
-            data = csv_data.loc[(date >= start) & (date <= end)]
-        elif self.level == 'state':
-            data = csv_data.loc[(date >= start) & (date <= end)]
-        else:
-            data = csv_data.loc[(date >= start) & (date <= end)]
-        return data
-
+        mask = (date >= start) & (date <= end)
+        return tab[mask][data_type].to_numpy()
+    
 class NYTimes(Data):
     """! Class for NYTimes dataset, inherits the Data base class. Data in the dataset is available 
     in two levels, states and counties. Dataset is specifically USA only.

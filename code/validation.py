@@ -16,26 +16,28 @@ from matplotlib import pyplot as plt
 # Import hard coded dates, decays and "a" values.
 import prediction_data as pdata
 
-parser = argparse.ArgumentParser(description='validation of prediction performance for all states')
-parser.add_argument('--END_DATE', default = "default",
-                    help='end date for training models')
-parser.add_argument('--VAL_END_DATE', default = "default",
-                    help='end date for training models')
-parser.add_argument('--level', default = "state",
-                    help='state, nation or county')
-parser.add_argument('--state', default = "default",
-                    help='state')
-parser.add_argument('--nation', default = "default",
-                    help='nation')
-parser.add_argument('--county', default = "default",
-                    help='county')
-parser.add_argument('--dataset', default = "NYtimes",
-                    help='nytimes')
-parser.add_argument('--popin', type=float, default = 0,
-                    help='popin')
-args = parser.parse_args()
-
-print(args)
+def create_parser():
+    parser = argparse.ArgumentParser(description='validation of prediction performance for all states')
+    parser.add_argument('--END_DATE', default = "default",
+                        help='end date for training models')
+    parser.add_argument('--VAL_END_DATE', default = "default",
+                        help='end date for training models')
+    parser.add_argument('--level', default = "state",
+                        help='state, nation or county')
+    parser.add_argument('--state', default = "default",
+                        help='state')
+    parser.add_argument('--nation', default = "default",
+                        help='nation')
+    parser.add_argument('--county', default = "default",
+                        help='county')
+    parser.add_argument('--dataset', default = "NYtimes",
+                        help='nytimes')
+    parser.add_argument('--popin', type=float, default = 0,
+                        help='popin')
+    args = parser.parse_args()
+    
+    print(args)
+    return args
 
 # severe_state = ["Florida"]  
 
@@ -62,13 +64,16 @@ def validation_loss(model, init, params_all, train_data, val_data, new_sus, pop_
     return  0.5*loss(pred_confirm, val_data_confirm, smoothing=0.1) + loss(pred_fatality, val_data_fatality, smoothing=0.1)
 
 def get_county_list(cc_limit=200, pop_limit=50000):
-    """! The function creates a list of counties from the wanted dataset.
-    @param cc_limit The lower limit for confirmed cases for a county.
-    @param pop_limit A lower limit for population in a county.
-    @return A python list containing a list of valid counties.
+    """! Function to get a list of all counties based on specific criteria.
+    @param cc_limit Minimum number of confirmed cases for a county to be included.
+    @param pop_limit Minimum population required for inclusion.
+    @return A list of county/state combinations that meet the criteria (format: County_State).
     """
-    
-    non_county_list = ["Puerto Rico", "American Samoa", "Guam", "Northern Mariana Islands", "Virgin Islands", "Diamond Princess", "Grand Princess"]
+
+    # List of US territories that are not included in counties.
+    non_county_list = ["Puerto Rico", "American Samoa", "Guam", "Northern Mariana Islands", "Virgin Islands"]
+
+    # Create object for counties with data from NYTimes or JHU (or own dataset).
 
     if args.dataset == "NYtimes":
         data = NYTimes(level='counties')
@@ -76,24 +81,34 @@ def get_county_list(cc_limit=200, pop_limit=50000):
     #   data = OWN_DATASET(args)
     else:
         data = JHU_US(level='counties')
-    
+
+    # Load populations of US counties.
     with open("data/county_pop.json", 'r') as f:
         County_Pop = json.load(f)
+    
+    # Go through counties and add them to county_list if certain statements explained below are true.
     county_list = []
     for region in County_Pop.keys():
         county, state = region.split("_")
-        # print(state)
+
+        # Get data from counties exceeding the pop_limit given to the function.
         if County_Pop[region][0]>=pop_limit and state not in non_county_list:        
             train_data = data.get("2020-03-22", args.END_DATE, state, county)
             confirm, death = train_data[0], train_data[1]
             start_date = get_start_date(train_data)
-            if len(death) > 0 and np.max(death) >=0 and np.max(confirm) > cc_limit and start_date < "2020-05-10" and county != "Lassen":
+
+            # Add county to list if all of the following statements are true.
+                # There have been deaths on more than one day.
+                # There are more deaths than five.
+                # There are more confirmed cases than the cc_limit given to the function.
+                # Start date of data is earlier than 2020-05-01.
+            if len(death) >0 and np.max(death)>5 and np.max(confirm)>cc_limit and start_date < "2020-05-01":
                 county_list += [region]
 
     return county_list
 
 def get_region_list():
-    """! The function creates a list of regions, nations or counties depending on input parameters. It also creates the names for the directories where the validation files are written.
+    """! The function creates a list of nations, states or counties depending on input parameters. It also creates the names for the directories where the validation files are written.
     @return A dictionary containing parameters, which depend on whether a state, county or nation was chosen.
     """
 
@@ -153,6 +168,8 @@ def get_region_list():
     elif args.level == "nation":
         
         data = JHU_global()
+        # if args.dataset == "OWN_DATASET":
+        #   data = OWN_DATASET(args)
         region_list = pdata.START_nation.keys()
         mid_dates = pdata.mid_dates_nation
 
@@ -191,6 +208,7 @@ def generate_parameters(region, param_dict):
             second_start_date = mid_dates[state]
             train_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, args.END_DATE, state)]
             reopen_flag = True
+            
         else:
             second_start_date = "2020-08-30"
             train_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, args.END_DATE, state)]
@@ -255,12 +273,15 @@ def generate_parameters(region, param_dict):
         nation = str(region)
         Nation_Pop = param_dict['Nation_Pop']
         Pop = Nation_Pop["United States"] if nation == "US" else Nation_Pop[nation]
+
         if nation in pdata.mid_dates_nation.keys():
             second_start_date = mid_dates[nation]
             reopen_flag = True
+
         elif nation == "Turkey":
             second_start_date = "2020-06-07"
             reopen_flag = False
+
         else:
             second_start_date = "2020-07-30"
             reopen_flag = False
@@ -281,6 +302,45 @@ def generate_parameters(region, param_dict):
     return {'a': a, 'decay': decay, 'pop_in': pop_in, 'Pop': Pop, 'state': state,
              'train_data': train_data, 'reopen_flag': reopen_flag, 'val_data': val_data,
              'full_data': full_data, 'start_date': start_date, 'second_start_date': second_start_date, 'nation': nation}
+
+def train_model(N, E_0, I_0, R_0, a, decay, bias, train_data, new_sus, pop_in, val_data):
+    model = Learner_SuEIR(N=N, E_0=E_0, I_0=I_0, R_0=R_0, a=a, decay=decay, bias=bias)
+
+    # At the initialization we assume that there is not recovered cases.
+    init = [N-E_0-I_0-R_0, E_0, I_0, R_0]
+    print(init)
+    # train the model using the candidate N and E_0, then compute the validation loss
+    params_all, loss_all = rolling_train(model, init, train_data, new_sus, pop_in=pop_in)
+    val_loss = validation_loss(model, init, params_all, train_data, val_data, new_sus, pop_in=pop_in)
+
+    for params in params_all:
+        beta, gamma, sigma, mu = params
+        # we cannot allow mu>sigma otherwise the model is not valid
+        if mu>sigma:
+            val_loss = 1e6
+
+    return model, params_all, loss_all, val_loss, init, beta, gamma, sigma, mu
+
+def plot_results(confirm, true_confirm, region, deaths, true_deaths):
+    plt.figure()
+    plt.plot(confirm, color = 'r', linestyle='dashed')
+    plt.plot(true_confirm, color = 'b')
+    plt.xlabel('Days')
+    plt.ylabel('Confirmed cases') 
+    plt.title('Daily increase of confirmed cases in ' + region)
+    plt.legend(labels = ['Predicted cases', 'Confirmed cases'])
+    plt.savefig("figure_"+args.level+"/daily_increase.pdf")
+    plt.close()
+    
+    plt.figure()
+    plt.plot(deaths, color = 'r', linestyle='dashed')
+    plt.plot(true_deaths, color = 'b')
+    plt.xlabel('Days')
+    plt.ylabel('Deaths') 
+    plt.title('Daily increase of deaths in ' + region)
+    plt.legend(labels = ['Predicted deaths', 'Confirmed deaths'])
+    plt.savefig("figure_"+args.level+"/daily_increase_death.pdf")
+    plt.close()
 
 def generate_validation_results(parameters, params_allregion, region):
     """! The function fills the params_allregion dictionary with validation results per region.
@@ -375,20 +435,8 @@ def generate_validation_results(parameters, params_allregion, region):
                     bias = 0.02
             data_confirm, data_fatality = train_data[0][0], train_data[0][1]
             # print (bias)
-            model = Learner_SuEIR(N=N, E_0=E_0, I_0=data_confirm[0], R_0=data_fatality[0], a=parameters['a'], decay=parameters['decay'], bias=bias)
 
-            # At the initialization we assume that there is not recovered cases.
-            init = [N-E_0-data_confirm[0]-data_fatality[0], E_0, data_confirm[0], data_fatality[0]]
-            print(init)
-            # train the model using the candidate N and E_0, then compute the validation loss
-            params_all, loss_all = rolling_train(model, init, train_data, new_sus, pop_in=pop_in)
-            val_loss = validation_loss(model, init, params_all, train_data, val_data, new_sus, pop_in=pop_in)
-
-            for params in params_all:
-                beta, gamma, sigma, mu = params
-                # we cannot allow mu>sigma otherwise the model is not valid
-                if mu>sigma:
-                    val_loss = 1e6
+            model, params_all, loss_all, val_loss, init, beta, gamma, sigma, mu = train_model(N, E_0, data_confirm[0], data_fatality[0], parameters['a'], parameters['decay'], bias,  train_data, new_sus, pop_in, val_data)
 
             # using the model to forecast the fatality and confirmed cases in the next 100 days, 
             # output max_daily, last confirm and last fatality for validation
@@ -413,25 +461,7 @@ def generate_validation_results(parameters, params_allregion, region):
             #When the smallest validation loss yet is found, the plots are overwritten
 
             if val_loss < min_val_loss:
-                plt.figure()
-                plt.plot(confirm, color = 'r', linestyle='dashed')
-                plt.plot(true_confirm, color = 'b')
-                plt.xlabel('Days')
-                plt.ylabel('Confirmed cases') 
-                plt.title('Daily increase of confirmed cases in ' + region)
-                plt.legend(labels = ['Predicted cases', 'Confirmed cases'])
-                plt.savefig("figure_"+args.level+"/daily_increase.pdf")
-                plt.close()
-                
-                plt.figure()
-                plt.plot(deaths, color = 'r', linestyle='dashed')
-                plt.plot(true_deaths, color = 'b')
-                plt.xlabel('Days')
-                plt.ylabel('Deaths') 
-                plt.title('Daily increase of deaths in ' + region)
-                plt.legend(labels = ['Predicted deaths', 'Confirmed deaths'])
-                plt.savefig("figure_"+args.level+"/daily_increase_death.pdf")
-                plt.close()
+                plot_results(confirm, true_confirm, region, deaths, true_deaths)
             min_val_loss = np.minimum(val_loss, min_val_loss)
             # print(val_loss)
 
@@ -476,4 +506,5 @@ def generate_validation_files():
 # Once the parameter validation set is created, it is passed to the ’Estimation Phase’ which in turn generates the predicted data file." in the linked
 # master's thesis.
 if __name__ == '__main__':
+    args = create_parser()
     generate_validation_files()
