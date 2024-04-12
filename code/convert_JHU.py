@@ -14,9 +14,6 @@ def get_JHU(level):
     length = ((datetime.today()-datetime.strptime("2020-03-10", "%Y-%m-%d")).days)
 
     if level=="nation":
-        #df_confirm = pd.read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv")
-        #df_fata = pd.read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv")
-        #df_recover = pd.read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv")
         confirm = 'data/jhu_confirmed_global.csv'
         death = 'data/jhu_deaths_global.csv'
         recover = 'data/jhu_recovered_global.csv'
@@ -62,8 +59,6 @@ def get_JHU(level):
 
     elif level == "states":
 
-        #df_confirm = pd.read_csv('https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_US.csv')
-        #df_fata = pd.read_csv('https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_US.csv')
         df_confirm = pd.read_csv('data/jhu_confirmed_us.csv')
         df_fata = pd.read_csv('data/jhu_deaths_us.csv')
 
@@ -109,8 +104,6 @@ def get_JHU(level):
 
 
     elif level == "counties":
-        #df_confirm = pd.read_csv('https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_US.csv')
-        #df_fata = pd.read_csv('https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_US.csv')
         df_confirm = pd.read_csv('data/jhu_confirmed_us.csv')
         df_fata = pd.read_csv('data/jhu_deaths_us.csv')
         regions = df_confirm["Province_State"].unique()

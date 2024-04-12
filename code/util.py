@@ -13,6 +13,7 @@ import os
 os.environ['DC_STATEHOOD'] = '1'
 import us
 
+
 def first_valid_date(dates, format="%m/%d/%y"):
     """! Find the index of the first valid date item in an array
     @param dates  an array of dates
@@ -28,6 +29,7 @@ def first_valid_date(dates, format="%m/%d/%y"):
             first_date_index += 1
     return first_date_index
 
+
 def ensure_float64(arr):
     """! Convert array to dtype float64, if it is not already
     @param arr Array of numbers
@@ -36,6 +38,7 @@ def ensure_float64(arr):
     if arr.dtype != np.float64:
         return arr.astype(np.float64)
     return arr
+
 
 def func(x, a, b, bias):   
     """! Function used apparently to generate a coefficient. Used to add fluctuation to data. Seemingly not used by the program.
@@ -47,6 +50,7 @@ def func(x, a, b, bias):
     """
     return a*np.minimum(np.exp(-b*(x+bias)), 1)
 
+
 def func_root(x, a, b, bias):
     """! Function used apparently to generate a coefficient. Instead of using x and bias, it uses the root of x. Seemingly not used by the program.
     @param x  an array of numeric data
@@ -56,6 +60,7 @@ def func_root(x, a, b, bias):
     @return  the newly calcluated coefficient
     """   
     return a*np.minimum(np.exp(-b*(x**0.5)), 1)
+
 
 def func_new(x, a, b, bias):
     """! Function used apparently to generate a coefficient. Like func, but adds 0.2 to the value. Seemingly not used by the program.
@@ -67,6 +72,7 @@ def func_new(x, a, b, bias):
     """
     return a*np.minimum(np.exp(-b*(x+bias)), 1) + 0.2
 
+
 def func_poly(x, a, b, bias):
     """! Function used apparently to generate a coefficient. Calculated differently than in func. Seemingly not used by the program.
     @param x  an array of numeric data
@@ -77,6 +83,7 @@ def func_poly(x, a, b, bias):
     """
     return a*np.minimum((x+bias+1)**(-b), 1)
 
+
 def func_sin(x, a, b):
     """! Function used apparently to generate a coefficient. Called by add_fluctuation.
     @param x  an array of numeric data
@@ -85,6 +92,7 @@ def func_sin(x, a, b):
     @return  the newly calcluated coefficient
     """
     return a*np.sin(2*np.pi*(x+b)/7)
+
 
 def lognorm_ave(x, a=4, b=0.568):
     """! Function used to calculate the average of a log-normal distribution random variable.
@@ -99,6 +107,7 @@ def lognorm_ave(x, a=4, b=0.568):
     weights = lognorm_pdf[0:l]/lognorm_pdf[0:l].sum()
     weights = weights[::-1]
     return (x*weights).sum()
+
 
 def add_fluction(x, a=0.3, b=-0.5):
     """! Function used to add fluctuation to a set of numeric data.
@@ -125,6 +134,7 @@ def add_fluction(x, a=0.3, b=-0.5):
     data_output += x[num_weeks*7+1:].tolist()
 
     return np.asarray(data_output)
+
 
 def write_val_to_json(params_allregion, write_file_name_all, write_file_name_best, limit=.5e-5):
     """! Function used to write validation results into .json files.
@@ -170,6 +180,7 @@ def write_val_to_json(params_allregion, write_file_name_all, write_file_name_bes
     f.write(dict_file)
     f.close()
 
+
 def state2fips(state):
     """! Function used return the Federal Information Processing Standard code of the US state
     @param state  the name of the region for which function is called.
@@ -179,6 +190,7 @@ def state2fips(state):
         return us.states.lookup(state).fips
     else:
         return "US"
+
 
 def get_state_list():
     """! Function used to get a list of US states. Function not called anywhere, and appears to reference things which do not exist.
@@ -197,6 +209,7 @@ def get_state_list():
 
     return state_list
 
+
 def get_ca_county_list():
     """! Function used to get a list of the counties of California, USA. Function is not called anywhere, and appears to not work.
     @return  A list of CA counties (presumably)
@@ -212,23 +225,6 @@ def get_ca_county_list():
     county_list = [[county, "California"] for county in _county_list]
     return county_list
 
-# def get_large_county_list():
-#     file_name = 'covid-19-data/us-counties.csv'
-#     df_Train = pd.read_csv(file_name)
-#     counties = df_Train["county"].unique()
-#     num = 0
-#     counties = []
-#     states =  df_Train["state"].unique()
-#     for state in states:
-#         df_state = df_Train[df_Train["state"]==state]
-#         for county in df_state["county"].unique():
-#             max_cc = df_state[df_state["county"]==county]["cases"].max()
-#             df_county = df_state[df_state["county"]==county]
-#             min_date = df_county[df_county["cases"]>50].date.min()
-#             if max_cc >= 1000 and not county=="Unknown" and min_date<"2020-04-25":
-#                 counties += [[county, state]]
-
-#     return counties
 
 def get_county_list():
     """! Function to get a list of all counties in USA.
@@ -245,6 +241,7 @@ def get_county_list():
 
     return county_list
 
+
 def get_start_date(data, limit=10):
     """! Function to get the start date of the given dataset
     @param data  the dataset of which the start date is wanted. Seems that when called in validation, data is confirmed cases.
@@ -257,6 +254,7 @@ def get_start_date(data, limit=10):
         ind = float(ind[0])
         START_DATE = (pd.to_datetime("2020-03-22") + timedelta(days=ind)).strftime("%Y-%m-%d")
     return START_DATE
+
 
 def num2str(x):
     """! Helper function to convert a number to a string.
@@ -271,6 +269,7 @@ def num2str(x):
     if len(x)==2:
         x += "000"
     return x
+
 
 def plotting(pred_data, region):
     """! Function presumably used for plotting the data that the model predicts. Not used anywhere in the code.

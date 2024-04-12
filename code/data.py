@@ -51,7 +51,6 @@ class NYTimes(Data):
         @param level  The level of data, either 'states' or 'counties'. States by default.
         """
         assert level == 'states' or level == 'counties', 'level must be [states|counties]'
-        #url = 'https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-' + level + '.csv'
         url = 'data/nytimes_us-' + level + '.csv' # .csv files localized to ../code/data from the nytimes github
         self.table = pd.read_csv(url).drop('fips', axis=1)
                 
@@ -96,7 +95,6 @@ class NYTimes(Data):
             tab = state_table[state_table['county'] == county]
         date = pd.to_datetime(tab['date'])
         start = datetime.datetime.strptime(start_date, '%Y-%m-%d')
-        # print(end_date)
         end = datetime.datetime.strptime(end_date, '%Y-%m-%d')
         mask = (date >= start) & (date <= end)
         return tab[mask]['cases'].to_numpy(), tab[mask]['deaths'].to_numpy()
@@ -111,7 +109,6 @@ class JHU_US(Data):
         @param level  The level of data, either 'states' or 'counties'. States by default.
         """
         assert level == 'states' or level == 'counties', 'level must be [states|counties]'
-        # url = 'data/train_' + level + '.csv'
         self.table = get_JHU(level)#.drop('fips', axis=1)
         assert not self.table.isnull().values.any(), 'We do not handle nan cases in NYTimes'
         self.level = level
@@ -151,7 +148,6 @@ class JHU_US(Data):
             tab = state_table[state_table['county'] == county]
         date = pd.to_datetime(tab['date'])
         start = datetime.datetime.strptime(start_date, '%Y-%m-%d')
-        # print(end_date)
         end = datetime.datetime.strptime(end_date, '%Y-%m-%d')
         mask = (date >= start) & (date <= end)
         return tab[mask]['cases'].to_numpy(dtype=float), tab[mask]['deaths'].to_numpy(dtype=float)
@@ -162,9 +158,6 @@ class JHU_global(Data):
     def __init__(self):
         """! JHU_global class initializer. Creates the used pandas dataframes.
         """
-        #confirm = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv'
-        #death = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv'
-        #recover = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv'
         confirm = 'data/jhu_confirmed_global.csv'
         death = 'data/jhu_deaths_global.csv'
         recover = 'data/jhu_recovered_global.csv'
@@ -214,10 +207,7 @@ class Hospital_CA(Data):
     def __init__(self):
         """! Hospital_CA class initializer. Creates pandas dataframe.
         """
-        #url = 'https://data.chhs.ca.gov/dataset/6882c390-b2d7-4b9a-aefa-2068cee63e47/resource/6cd8d424-dfaa-4bdd-9410-a3d656e1176e/download/covid19data.csv'
         datafile = 'data/covid19hospitalbycounty_california.csv'
-        #self.table = pd.read_csv(url)[['Most Recent Date', 'County Name',                               
-                                       #'COVID-19 Positive Patients', 'ICU COVID-19 Positive Patients']] # I assume COVID Positive = COVID confirmed
         self.table = pd.read_csv(datafile)[['todays_date', 'county', 'hospitalized_covid_confirmed_patients', 'icu_covid_confirmed_patients']]
 
     def date_range(self, region):
@@ -250,8 +240,6 @@ class Hospital_US(Data):
         """! Hospital_US class initializer. Creates pandas dataframe.
         @param state  Name of the state for which data is wanted.
         """
-        #url = 'https://covidtracking.com/api/v1/states/{}/daily.csv'.format(us.states.lookup(state).abbr.lower())
-        #table = pd.read_csv(url)[['date', 'hospitalizedCurrently', 'inIcuCurrently']]
         datafile = 'data/all-states-history.csv'
         stateabbr = us.states.lookup(state).abbr #.lower() # in the ...daily.csv the API call gives, the abbreviation is apparently lowercase
         table = pd.read_csv(datafile)[['state', 'date', 'hospitalizedCurrently', 'inIcuCurrently']]
@@ -260,7 +248,6 @@ class Hospital_US(Data):
         statetable = statetable.drop(columns=['state']) # remove the 'state' column to maintain base-code dataframe format
         # Here we assume that once there is data, then the data is cumulative   # (WTF does this mean? Cumulative of what? -Eetu)
         self.table = statetable[table.notnull().all(axis=1)] # Make table only include rows where all values are not null. This is base code, from this I assume that in the .csv NaN does not mean 0
-        #print(self.table)
     
     def date_range(self):
         """! Get the first and last dates of available data in the dataset.

@@ -230,7 +230,5 @@ class Learner_SuEIR_H(Model):
 
 
 if __name__ == '__main__':
-    # m = xxx()
-    # m(None, None, 1)
 
     pass
