@@ -4,17 +4,11 @@ from datetime import datetime
 from util import first_valid_date
 
 def get_JHU(level):
-    """Get county/state/nation level COVID-19 data from JHU global data files.
-    
-    Source of data is linked in commented code.
-    
-    Args:
-        level (str): Specifies the level of data to be retrieved (county/state/nation).
-        
-    Returns:
-        pd.DataFrame: Pandas DataFrame containing COVID-19 information about the specific level 
-                      or 0 if level value is not valid.
+    """! Get county/state/nation level COVID-19 data from JHU global data files. Source of data is linked in commented code.
+    @param level Specifies the level of data to be retrieved (county/state/nation).
+    @return Pandas DataFrame containing COVID-19 information about the specific level or 0 if level value is not valid.
     """
+    
     # Calculate the number of days from the specified date.
     length = (datetime.today() - datetime.strptime("2020-03-10", "%Y-%m-%d")).days
 
