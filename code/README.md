@@ -24,7 +24,7 @@ It should print something that mentions .venv folder
 
 ### Install needed packages
 
-```$ pip install -r requirements```
+```$ pip install -r requirements.txt```
 
 Enviroment is ready to be used
 
