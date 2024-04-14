@@ -116,7 +116,6 @@ elif args.level == "county":
 elif args.level == "nation":
     # Create object for nations with data from JHU.
     data = JHU_global()
-    # region_list = START_nation.keys()
 
     # Get middle dates for nations and load populations of nations.
     mid_dates = pdata.mid_dates_nation
