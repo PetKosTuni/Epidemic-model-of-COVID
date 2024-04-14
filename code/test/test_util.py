@@ -72,11 +72,13 @@ class TestUtilities(unittest.TestCase):
     self.assertEqual(x3, 0)
 
   def test_first_valid_date(self):
-    dates = ["1", "hello", "01/01/01/01", "2000/01", "invalid date", "01/01/23", "12/31/24"]
+    dates = ["1", "hello", "01/01/01/01", "2000/01", "invalid date",
+             "01/01/23", "12/31/24"]
     expected_index = 5
     result = first_valid_date(dates)
     self.assertEqual(result, expected_index)
-    dates = ["1", "hello", "01/01/01/01", "2000/01", "invalid date", "01/01/2023", "12/31/2024"]
+    dates = ["1", "hello", "01/01/01/01", "2000/01", "invalid date",
+             "01/01/2023", "12/31/2024"]
     expected_index = 5
     result = first_valid_date(dates, format="%m/%d/%Y")
     self.assertEqual(result, expected_index)
@@ -177,9 +179,24 @@ class TestUtilities(unittest.TestCase):
     coefficient7 = func_sin(0,0,0)
     self.assertEqual(coefficient7, 0)
 
-  # todo
   def test_write_val_to_json(self):
-    pass
+    path = "test/testoutput"
+    test_file1 = "util_test_output1"
+    test_file2 = "util_test_output2"
+    error_msg = "Test output file not found!"
+    with open("test/testinput_util.json", "r") as test_file:
+      data = json.load(test_file)
+    write_val_to_json(data, os.path.join(path, test_file1),
+                      os.path.join(path, test_file2), limit=0.5e-5)
+    with open(os.path.join(path,test_file2), "r") as test_output:
+      data2 = json.load(test_output)
+    self.assertTrue(os.path.exists(os.path.join(path, test_file2)),
+                    error_msg)
+    self.assertTrue(os.path.exists(os.path.join(path, test_file1)),
+                    error_msg)
+    self.assertLess(abs(data2["Alabama"][0] - 980637.0), 10)
+    self.assertLess(abs(data2["Alabama"][1] - 17829), 10)
+    self.assertLess(abs(data2["Alabama"][3] - 575091), 10)
 
   # todo
   def test_get_start_date(self):
