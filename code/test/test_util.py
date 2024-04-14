@@ -1,5 +1,3 @@
-from contextlib import AbstractContextManager
-from typing import Any
 import unittest
 import os
 import numpy as np
@@ -180,27 +178,24 @@ class TestUtilities(unittest.TestCase):
     self.assertEqual(coefficient7, 0)
 
   def test_write_val_to_json(self):
-    path = "test/testoutput"
+    input_path = "test/testinput"
+    output_path = "test/testoutput"
     test_file1 = "util_test_output1"
     test_file2 = "util_test_output2"
     error_msg = "Test output file not found!"
-    with open("test/testinput_util.json", "r") as test_file:
+    with open(os.path.join(input_path, "testinput_util.json"), "r") as test_file:
       data = json.load(test_file)
-    write_val_to_json(data, os.path.join(path, test_file1),
-                      os.path.join(path, test_file2), limit=0.5e-5)
-    with open(os.path.join(path,test_file2), "r") as test_output:
+    write_val_to_json(data, os.path.join(output_path, test_file1),
+                      os.path.join(output_path, test_file2), limit=0.5e-5)
+    with open(os.path.join(output_path,test_file2), "r") as test_output:
       data2 = json.load(test_output)
-    self.assertTrue(os.path.exists(os.path.join(path, test_file2)),
+    self.assertTrue(os.path.exists(os.path.join(output_path, test_file2)),
                     error_msg)
-    self.assertTrue(os.path.exists(os.path.join(path, test_file1)),
+    self.assertTrue(os.path.exists(os.path.join(output_path, test_file1)),
                     error_msg)
     self.assertLess(abs(data2["Alabama"][0] - 980637.0), 10)
     self.assertLess(abs(data2["Alabama"][1] - 17829), 10)
     self.assertLess(abs(data2["Alabama"][3] - 575091), 10)
-
-  # todo
-  def test_get_start_date(self):
-    pass
 
 if __name__ == '__main__':
     unittest.main()
