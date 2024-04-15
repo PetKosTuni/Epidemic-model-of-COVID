@@ -108,7 +108,8 @@ def read_validation_files():
 
 def generate_training_parameters(region, data, NE0_region):
     
-    state, county = 0
+    state = 0
+    county = 0
     if args.level == "state":
         state = str(region)
 

@@ -205,3 +205,6 @@ north_cal = [
     "San Joaquin",
     "Fresno"
 ]
+
+# Change these values depending on the dataset implemented either in the csv-file, or here.
+custom_dataset_columns = ['date', 'region', 'state', 'county', 'cases', 'deaths', 'recoveries']

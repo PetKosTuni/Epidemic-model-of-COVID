@@ -36,8 +36,6 @@ class Data(object):
 # but to work nicely the date_range- and get-functions have to be implemented like the ready datasets
 # below. The dataset can include either US county, US-state or country data. CSV-files would be the
 # easiest way, by including them into the data folder, as done with the ready datasets (NYtimes etc).
-# Remember to rename the dataset here, and replace the commented OWN_DATASETs in the validation.py
-# and generate_predictions.py -files.
 
 '''
 Inherit the Data Object:
@@ -50,21 +48,29 @@ class OWN_DATASET(Data):
         pass
 '''
 
+# The DATASET_template uses a filepath supplied as an argument when launching the validation/generation files.
+# If a new dataset is wanted to be implemented as an csv, the template should be able to create useful training data,
+# if it includes confirmed cases, deaths (and recovery amounts if wanted).
+# The names for these columns may be slightly different in different dataset.csv-files, so they can be changed in either
+# the csv-files or by changing the hard coded column names in the prediction_data.py-file.
+
 class DATASET_template(Data):
-    def __init__(self, level, url):
+    def __init__(self, columns, filepath, level):
 
         self.level = level
-        self.table = pd.read_csv(url)
+        self.table = pd.read_csv(filepath)
+        self.column_names = columns
+        print(columns)
 
         if level == "state" or level == "counties":
             self.state_list = self.table["state"].unique()
         
     def data_range(self):
         
-        dates = pd.to_datetime(self.table['date'], format='%Y-%m-%d').dt.date.to_numpy()
+        dates = pd.to_datetime(self.table[self.columns[0]], format='%Y-%m-%d').dt.date.to_numpy()
         return dates[-1], dates[0]
     
-    def get(self, start_date, end_date, data_type, state = None, county = None):
+    def get(self, start_date, end_date, state = None, county = None):
 
         if self.level == 'states':
             state_table = self.table[self.table['state']
@@ -75,7 +81,7 @@ class DATASET_template(Data):
             state_table = self.table[self.table['state']
                             == us.states.lookup(state).name]
             
-            tab = state_table[state_table['county'] == county]
+            tab = state_table[state_table[self.columns] == county]
         else:
             tab = self.table
         
@@ -83,7 +89,11 @@ class DATASET_template(Data):
         start = datetime.datetime.strptime(start_date, '%Y-%m-%d')
         end = datetime.datetime.strptime(end_date, '%Y-%m-%d')
         mask = (date >= start) & (date <= end)
-        return tab[mask][data_type].to_numpy()
+
+        if self.level == 'nation':
+            return tab[mask][self.column_names[4]].to_numpy(), tab[mask][self.column_names[5]].to_numpy(), tab[mask][self.column_names[6]].to_numpy()
+        else:
+            return tab[mask][self.column_names[4]].to_numpy(), tab[mask][self.column_names[5]].to_numpy()
     
 class NYTimes(Data):
     """! Class for NYTimes dataset, inherits the Data base class. Data in the dataset is available 

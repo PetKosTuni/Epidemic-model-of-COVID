@@ -8,7 +8,7 @@ os.environ['DC_STATEHOOD'] = '1'
 import us
 
 from model import Learner_SuEIR
-from data import JHU_US, JHU_global, NYTimes
+from data import JHU_US, JHU_global, NYTimes, DATASET_template
 from rolling_train_modified import rolling_train, rolling_prediction, loss
 from util import get_start_date, write_val_to_json
 from matplotlib import pyplot as plt
@@ -32,6 +32,8 @@ def create_parser():
                         help='county')
     parser.add_argument('--dataset', default = "NYtimes",
                         help='nytimes')
+    parser.add_argument('--dataset_filepath', default = "default",
+                        help='the filepath of the custom dataset: data/...')
     parser.add_argument('--popin', type=float, default = 0,
                         help='popin')
     args = parser.parse_args()
@@ -77,8 +79,8 @@ def get_county_list(cc_limit=200, pop_limit=50000):
 
     if args.dataset == "NYtimes":
         data = NYTimes(level='counties')
-    # elif args.dataset == "OWN_DATASET":
-    #   data = OWN_DATASET(args)
+    # elif args.dataset == "CUSTOM_DATASET":
+    #   DATASET_template(args.dataset_filepath, pdata. level = 'counties')
     else:
         data = JHU_US(level='counties')
 
@@ -121,8 +123,8 @@ def get_region_list():
         
         if args.dataset == "NYtimes":
             data = NYTimes(level='states')
-        # elif args.dataset == "OWN_DATASET":
-        #   data = OWN_DATASET(args)
+        # elif args.dataset == "CUSTOM_DATASET":
+        #   DATASET_template(args.dataset_filepath, args.dataset_columns, level = 'states')
         else:
             data = JHU_US(level='states')
 
@@ -144,8 +146,8 @@ def get_region_list():
 
         if args.dataset == "NYtimes":
             data = NYTimes(level='counties')
-        # elif args.dataset == "OWN_DATASET":
-        #   data = OWN_DATASET(args)
+        # elif args.dataset == "CUSTOM_DATASET":
+        #   DATASET_template(args.dataset_filepath, args.dataset_columns, level = 'counties')
         else:
             data = JHU_US(level='counties')
         
@@ -167,9 +169,10 @@ def get_region_list():
 
     elif args.level == "nation":
         
-        data = JHU_global()
-        # if args.dataset == "OWN_DATASET":
-        #   data = OWN_DATASET(args)
+        if args.dataset == "CUSTOM_DATASET":
+            data = DATASET_template(args.dataset_filepath, pdata.custom_dataset_columns, level = 'nation')
+        else:
+            data = JHU_global()
         region_list = pdata.START_nation.keys()
         mid_dates = pdata.mid_dates_nation
 
@@ -289,6 +292,7 @@ def generate_parameters(region, param_dict):
 
         start_date = pdata.START_nation[nation]
         train_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, args.END_DATE, nation)]
+        print(train_data)
         full_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, args.END_DATE, nation)]
 
         if nation=="US":
