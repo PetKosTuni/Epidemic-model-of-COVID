@@ -34,6 +34,8 @@ def create_parser():
                         help='nytimes')
     parser.add_argument('--dataset_filepath', default = "default",
                         help='the filepath of the custom dataset: data/...')
+    #parser.add_argument('--dataset_columns', default = "default",
+                        # help='the column names of the custom dataset in a list form: [..., ..., ...]')
     parser.add_argument('--popin', type=float, default = 0,
                         help='popin')
     args = parser.parse_args()
@@ -79,8 +81,8 @@ def get_county_list(cc_limit=200, pop_limit=50000):
 
     if args.dataset == "NYtimes":
         data = NYTimes(level='counties')
-    # elif args.dataset == "CUSTOM_DATASET":
-    #   DATASET_template(args.dataset_filepath, pdata. level = 'counties')
+    elif args.dataset == "CUSTOM_DATASET":
+        data = DATASET_template(args.dataset_filepath, pdata.custom_dataset_columns, level = 'counties')
     else:
         data = JHU_US(level='counties')
 
@@ -123,8 +125,8 @@ def get_region_list():
         
         if args.dataset == "NYtimes":
             data = NYTimes(level='states')
-        # elif args.dataset == "CUSTOM_DATASET":
-        #   DATASET_template(args.dataset_filepath, args.dataset_columns, level = 'states')
+        elif args.dataset == "CUSTOM_DATASET":
+            data = DATASET_template(args.dataset_filepath, pdata.custom_dataset_columns, level = 'states')
         else:
             data = JHU_US(level='states')
 
@@ -146,8 +148,8 @@ def get_region_list():
 
         if args.dataset == "NYtimes":
             data = NYTimes(level='counties')
-        # elif args.dataset == "CUSTOM_DATASET":
-        #   DATASET_template(args.dataset_filepath, args.dataset_columns, level = 'counties')
+        elif args.dataset == "CUSTOM_DATASET":
+            data = DATASET_template(args.dataset_filepath, pdata.custom_dataset_columns, level = 'counties')
         else:
             data = JHU_US(level='counties')
         
@@ -291,16 +293,15 @@ def generate_parameters(region, param_dict):
         pop_in = 1/2000 if nation == "Germany" else 1/400
 
         start_date = pdata.START_nation[nation]
-        train_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, args.END_DATE, nation)]
-        print(train_data)
-        full_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, args.END_DATE, nation)]
+        train_data = [data.get(start_date, second_start_date, country = nation), data.get(second_start_date, args.END_DATE, country = nation)]
+        full_data = [data.get(start_date, second_start_date, country = nation), data.get(second_start_date, args.END_DATE, country = nation)]
 
         if nation=="US":
             resurge_start_date = "2020-09-15"
-            train_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, resurge_start_date, nation), data.get(resurge_start_date, args.END_DATE, nation)]
-            full_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, resurge_start_date, nation), data.get(resurge_start_date, args.END_DATE, nation)]
+            train_data = [data.get(start_date, second_start_date, country = nation), data.get(second_start_date, resurge_start_date, country = nation), data.get(resurge_start_date, args.END_DATE, country = nation)]
+            full_data = [data.get(start_date, second_start_date, country = nation), data.get(second_start_date, resurge_start_date, country = nation), data.get(resurge_start_date, args.END_DATE, country = nation)]
 
-        val_data = data.get(args.END_DATE, args.VAL_END_DATE, nation)
+        val_data = data.get(args.END_DATE, args.VAL_END_DATE, country = nation)
         a, decay = pdata.FR_nation[nation]
 
     return {'a': a, 'decay': decay, 'pop_in': pop_in, 'Pop': Pop, 'state': state,
