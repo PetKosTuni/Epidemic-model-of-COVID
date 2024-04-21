@@ -274,7 +274,6 @@ for state in state_list:
             ,0.550, 0.600 ,0.650 ,0.700 ,0.750, 0.800, 0.850 ,0.900 ,0.950, 0.975, 0.990, "NA"]
 
 
-    # pred_start_date = PRED_START_DATE        # Possibly needs to be uncommented?
 
     # Iterate over death quantiles.
     for quantile in death_quantiles:

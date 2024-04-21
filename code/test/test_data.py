@@ -6,7 +6,7 @@ os.environ['DC_STATEHOOD'] = '1'
 import us
 
 
-from data import *
+from data import NYTimes, JHU_US, JHU_global, HospitalUs, HospitalCa
 
 # This testing file contains unit tests for the data classes of data.py.
 # At time of writing, no clear test plan / framework has been decided, so I'll just write some
@@ -44,8 +44,8 @@ class TestNYTimes(unittest.TestCase):
         self.assertFalse(self.nytimes_states.table.empty) # table is not empty
         self.assertFalse(self.nytimes_counties.table.empty)
         
-        self.assertFalse(self.nytimes_states.state_list.size == 0) # list is not empty
-        self.assertFalse(self.nytimes_counties.state_list.size == 0)
+        self.assertNotEqual(self.nytimes_states.state_list.size, 0) # list is not empty
+        self.assertNotEqual(self.nytimes_counties.state_list.size, 0)
         
     def test_date_range_states(self):
         """!
@@ -56,8 +56,8 @@ class TestNYTimes(unittest.TestCase):
             date_first, date_last = self.nytimes_states.date_range(state)
             self.assertIsNotNone(date_first)
             self.assertIsNotNone(date_last)
-            self.assertTrue(len(date_first) > 0)
-            self.assertTrue(len(date_last) > 0)
+            self.assertGreater(len(date_first), 0)
+            self.assertGreater(len(date_last), 0)
 
     def test_date_range_counties(self):
         """!
@@ -70,15 +70,15 @@ class TestNYTimes(unittest.TestCase):
                 date_first, date_last = self.nytimes_counties.date_range(state, county)
                 self.assertIsNotNone(date_first)
                 self.assertIsNotNone(date_last)
-                self.assertTrue(len(date_first) > 0)
-                self.assertTrue(len(date_last) > 0)
+                self.assertGreater(len(date_first), 0)
+                self.assertGreater(len(date_last), 0)
         
     def test_state_list_not_empty(self):
         """!
         Test that the state_list attribute of the NYTimes class is not empty for either level.
         """
-        self.assertTrue(len(self.nytimes_states.state_list) > 0)
-        self.assertTrue(len(self.nytimes_counties.state_list) > 0)
+        self.assertGreater(len(self.nytimes_states.state_list), 0)
+        self.assertGreater(len(self.nytimes_counties.state_list), 0)
         
     def test_get_whole_range_states(self):
         """!
@@ -90,8 +90,8 @@ class TestNYTimes(unittest.TestCase):
             array_cases, array_deaths = self.nytimes_states.get(date_first, date_last, state)
             self.assertIsNotNone(array_cases)
             self.assertIsNotNone(array_deaths)
-            self.assertFalse(len(array_cases) == 0)
-            self.assertFalse(len(array_deaths) == 0)
+            self.assertNotEqual(len(array_cases), 0)
+            self.assertNotEqual(len(array_deaths), 0)
             
     def test_get_whole_range_counties(self):
         """!
@@ -105,11 +105,11 @@ class TestNYTimes(unittest.TestCase):
                 array_cases, array_deaths = self.nytimes_counties.get(date_first, date_last, state, county)
                 self.assertIsNotNone(array_cases)
                 self.assertIsNotNone(array_deaths)
-                self.assertFalse(len(array_cases) == 0)
-                self.assertFalse(len(array_deaths) == 0)
+                self.assertNotEqual(len(array_cases), 0)
+                self.assertNotEqual(len(array_deaths), 0)
             
             
-class TestJHU_US(unittest.TestCase): # Unable to test these now, JHU States (and prolly counties) is still broken
+class TestJhuUs(unittest.TestCase): # Unable to test these now, JHU States (and prolly counties) is still broken
     """! Class for unit testing JHU_US-class of data.py
     """
     def setUp(self):
@@ -137,8 +137,8 @@ class TestJHU_US(unittest.TestCase): # Unable to test these now, JHU States (and
         self.assertFalse(self.jhu_us_states.table.empty) # table is not empty
         self.assertFalse(self.jhu_us_counties.table.empty)
 
-        self.assertFalse(self.jhu_us_states.state_list.size == 0) # list is not empty
-        self.assertFalse(self.jhu_us_counties.state_list.size == 0)
+        self.assertGreater(self.jhu_us_states.state_list.size, 0) # list is not empty
+        self.assertGreater(self.jhu_us_counties.state_list.size, 0)
         
     def test_date_range_states(self):
         """!
@@ -148,8 +148,8 @@ class TestJHU_US(unittest.TestCase): # Unable to test these now, JHU States (and
             date_first, date_last = self.jhu_us_states.date_range(state)
             self.assertIsNotNone(date_first)
             self.assertIsNotNone(date_last)
-            self.assertTrue(len(date_first) > 0)
-            self.assertTrue(len(date_last) > 0)
+            self.assertGreater(len(date_first), 0)
+            self.assertGreater(len(date_last), 0)
             
     def test_date_range_counties(self):
         """!
@@ -161,8 +161,8 @@ class TestJHU_US(unittest.TestCase): # Unable to test these now, JHU States (and
                 date_first, date_last = self.jhu_us_counties.date_range(state, county)
                 self.assertIsNotNone(date_first)
                 self.assertIsNotNone(date_last)
-                self.assertTrue(len(date_first) > 0)
-                self.assertTrue(len(date_last) > 0)
+                self.assertGreater(len(date_first) > 0)
+                self.assertGreater(len(date_last) > 0)
                 
     def test_state_list_not_empty(self):
         """!
@@ -181,8 +181,8 @@ class TestJHU_US(unittest.TestCase): # Unable to test these now, JHU States (and
             array_cases, array_deaths = self.jhu_us_states.get(date_first, date_last, state)
             self.assertIsNotNone(array_cases)
             self.assertIsNotNone(array_deaths)
-            self.assertFalse(len(array_cases) == 0)
-            self.assertFalse(len(array_deaths) == 0)
+            self.assertNotEqual(len(array_cases), 0)
+            self.assertNotEqual(len(array_deaths), 0)
             
     def test_get_whole_range_counties(self):
         """!
@@ -196,11 +196,11 @@ class TestJHU_US(unittest.TestCase): # Unable to test these now, JHU States (and
                 array_cases, array_deaths = self.jhu_us_counties.get(date_first, date_last, state, county)
                 self.assertIsNotNone(array_cases)
                 self.assertIsNotNone(array_deaths)
-                self.assertFalse(len(array_cases) == 0)
-                self.assertFalse(len(array_deaths) == 0)
+                self.assertNotEqual(len(array_cases), 0)
+                self.assertNotEqual(len(array_deaths), 0)
             
             
-class TestJHU_global(unittest.TestCase):
+class TestJhuGlobal(unittest.TestCase):
     """! Class for unit testing JHU_global-class of data.py
     """
     def setUp(self):
@@ -235,8 +235,8 @@ class TestJHU_global(unittest.TestCase):
         date_first, date_last = self.jhu_global.date_range(dummy_country)
         self.assertIsNotNone(date_first)
         self.assertIsNotNone(date_last)
-        self.assertTrue(len(date_first) > 0)
-        self.assertTrue(len(date_last) > 0)
+        self.assertGreater(len(date_first), 0)
+        self.assertGreater(len(date_last), 0)
             
         
     def test_get_whole_range_countries(self):
@@ -251,13 +251,13 @@ class TestJHU_global(unittest.TestCase):
             self.assertIsNotNone(array_cases)
             self.assertIsNotNone(array_deaths)
             self.assertIsNotNone(array_recoveries)
-            self.assertFalse(len(array_cases) == 0)
-            self.assertFalse(len(array_deaths) == 0)
-            self.assertFalse(len(array_recoveries) == 0)
+            self.assertNotEqual(len(array_cases), 0)
+            self.assertNotEqual(len(array_deaths), 0)
+            self.assertNotEqual(len(array_recoveries), 0)
         
         
-class TestHospital_CA(unittest.TestCase):
-    """! Class for unit testing Hospital_CA-class of data.py
+class TestHospitalCa(unittest.TestCase):
+    """! Class for unit testing HospitalCa-class of data.py
     """
     def setUp(self):
         """!
@@ -268,7 +268,7 @@ class TestHospital_CA(unittest.TestCase):
 
         @param self  The current test case instance.
         """
-        self.hospital_ca = Hospital_CA()
+        self.hospital_ca = HospitalCa()
         self.county_list = self.hospital_ca.table["county"].unique()
 
     def test_init(self):
@@ -286,8 +286,8 @@ class TestHospital_CA(unittest.TestCase):
             date_first, date_last = self.hospital_ca.date_range(county)
             self.assertIsNotNone(date_first)
             self.assertIsNotNone(date_last)
-            self.assertTrue(len(date_first.isoformat()) > 0)
-            self.assertTrue(len(date_last.isoformat()) > 0)
+            self.assertGreater(len(date_first.isoformat()), 0)
+            self.assertGreater(len(date_last.isoformat()), 0)
 
     def test_get_whole_range(self):
         """!
@@ -303,20 +303,20 @@ class TestHospital_CA(unittest.TestCase):
             array_hospital, array_icu = self.hospital_ca.get(date_first, date_last, county)
             self.assertIsNotNone(array_hospital)
             self.assertIsNotNone(array_icu)
-            self.assertFalse(len(array_hospital) == 0)
-            self.assertFalse(len(array_icu) == 0)
+            self.assertNotEqual(len(array_hospital), 0)
+            self.assertNotEqual(len(array_icu), 0)
        
-class testHospital_US(unittest.TestCase):
-    """! Class for unit testing Hospital_US-class of data.py
+class testHospitalUs(unittest.TestCase):
+    """! Class for unit testing HospitalUs-class of data.py
     """
     def setUp(self):
-        """! Set up the test environment before each test case. Create instances of the Hospital_US class for each state.
+        """! Set up the test environment before each test case. Create instances of the HospitalUs class for each state.
         """
         self.hospital_us_instances = []
         for state in us.states.STATES:
-            instance = Hospital_US(state.name)
+            instance = HospitalUs(state.name)
             if not (instance.table.empty): # only take the states that the dataset has data for
-                self.hospital_us_instances.append(Hospital_US(state.name))
+                self.hospital_us_instances.append(HospitalUs(state.name))
         
     def test_init(self):
         """!
@@ -334,8 +334,8 @@ class testHospital_US(unittest.TestCase):
             date_first, date_last = state.date_range()
             self.assertIsNotNone(date_first)
             self.assertIsNotNone(date_last)
-            self.assertTrue(len(date_first.isoformat()) > 0)
-            self.assertTrue(len(date_last.isoformat()) > 0)          
+            self.assertGreater(len(date_first.isoformat()), 0)
+            self.assertGreater(len(date_last.isoformat()), 0)          
             
     def test_get_whole_range(self):
         """!
@@ -351,8 +351,8 @@ class testHospital_US(unittest.TestCase):
             array_hospital, array_icu = state.get(date_first, date_last)
             self.assertIsNotNone(array_hospital)
             self.assertIsNotNone(array_icu)
-            self.assertFalse(len(array_hospital) == 0)
-            self.assertFalse(len(array_icu) == 0)
+            self.assertNotEqual(len(array_hospital), 0)
+            self.assertNotEqual(len(array_icu), 0)
                  
 if __name__ == '__main__':
     unittest.main()
