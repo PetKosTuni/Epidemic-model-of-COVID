@@ -199,7 +199,7 @@ class JHU_global(Data):
         recover = countryrecover.loc[(date >= start) & (date <= end)]
         return confirm.to_numpy(), death.to_numpy(), recover.to_numpy()
 
-class Hospital_CA(Data): 
+class HospitalCa(Data): 
     """! Class for hospital data of California Health and Human Services. Seemingly not used in the code.
     Inherits the Data base class.
     """ 
@@ -232,7 +232,7 @@ class Hospital_CA(Data):
         mask = (dates >= start) & (dates <= end)
         return table[mask]['hospitalized_covid_confirmed_patients'].to_numpy(), table[mask]['icu_covid_confirmed_patients'].to_numpy() # ^
 
-class Hospital_US(Data):
+class HospitalUs(Data):
     """! Class for hospital data across the United States. Inherits the Data base class.
     """
     def __init__(self, state): 
@@ -269,6 +269,6 @@ class Hospital_US(Data):
         return masked['hospitalizedCurrently'].to_numpy(), masked['inIcuCurrently'].to_numpy()
 
 if __name__ == '__main__':
-    data = Hospital_US('california')
+    data = HospitalUs('california')
     a, b = data.get('2020-04-01', '2020-04-02')
     pass
