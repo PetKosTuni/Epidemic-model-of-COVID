@@ -68,16 +68,13 @@ def validation_loss(model, init, params_all, train_data, val_data, new_sus, pop_
     return  0.5*loss(pred_confirm, val_data_confirm, smoothing=0.1) + loss(pred_fatality, val_data_fatality, smoothing=0.1)
 
 def get_county_list(cc_limit=200, pop_limit=50000):
-    """! Function to get a list of all counties based on specific criteria.
-    @param cc_limit Minimum number of confirmed cases for a county to be included.
-    @param pop_limit Minimum population required for inclusion.
-    @return A list of county/state combinations that meet the criteria (format: County_State).
+    """! The function creates a list of counties from the wanted dataset.
+    @param cc_limit The lower limit for confirmed cases for a county.
+    @param pop_limit A lower limit for population in a county.
+    @return A python list containing a list of valid counties.
     """
-
-    # List of US territories that are not included in counties.
-    non_county_list = ["Puerto Rico", "American Samoa", "Guam", "Northern Mariana Islands", "Virgin Islands"]
-
-    # Create object for counties with data from NYTimes or JHU (or own dataset).
+    
+    non_county_list = ["Puerto Rico", "American Samoa", "Guam", "Northern Mariana Islands", "Virgin Islands", "Diamond Princess", "Grand Princess"]
 
     if args.dataset == "NYtimes":
         data = NYTimes(level='counties')
@@ -85,28 +82,18 @@ def get_county_list(cc_limit=200, pop_limit=50000):
         data = DATASET_template(args.dataset_filepath, pdata.custom_dataset_columns, level = 'counties')
     else:
         data = JHU_US(level='counties')
-
-    # Load populations of US counties.
+    
     with open("data/county_pop.json", 'r') as f:
         County_Pop = json.load(f)
     
-    # Go through counties and add them to county_list if certain statements explained below are true.
     county_list = []
     for region in County_Pop.keys():
         county, state = region.split("_")
-
-        # Get data from counties exceeding the pop_limit given to the function.
         if County_Pop[region][0]>=pop_limit and state not in non_county_list:        
             train_data = data.get("2020-03-22", args.END_DATE, state, county)
             confirm, death = train_data[0], train_data[1]
             start_date = get_start_date(train_data)
-
-            # Add county to list if all of the following statements are true.
-                # There have been deaths on more than one day.
-                # There are more deaths than five.
-                # There are more confirmed cases than the cc_limit given to the function.
-                # Start date of data is earlier than 2020-05-01.
-            if len(death) >0 and np.max(death)>5 and np.max(confirm)>cc_limit and start_date < "2020-05-01":
+            if len(death) > 0 and np.max(death) >=0 and np.max(confirm) > cc_limit and start_date < "2020-05-10" and county != "Lassen":
                 county_list += [region]
 
     return county_list
@@ -304,11 +291,28 @@ def generate_parameters(region, param_dict):
         val_data = data.get(args.END_DATE, args.VAL_END_DATE, country = nation)
         a, decay = pdata.FR_nation[nation]
 
+        
+        print(start_date, second_start_date, nation)
+
     return {'a': a, 'decay': decay, 'pop_in': pop_in, 'Pop': Pop, 'state': state,
              'train_data': train_data, 'reopen_flag': reopen_flag, 'val_data': val_data,
              'full_data': full_data, 'start_date': start_date, 'second_start_date': second_start_date, 'nation': nation}
 
 def train_model(N, E_0, I_0, R_0, a, decay, bias, train_data, new_sus, pop_in, val_data):
+    """! The function trains the SUEIR model, and returns it and parameters gained with the trained model.
+    @param N Total population.
+    @param E_0 Initial exposed population.
+    @param I_0 Initial infected population.
+    @param R_0 Initial recovered population.
+    @param a Learning rate parameter (starting rate).
+    @param decay Learning rate parameter (responsible for progressively lowering the rate).
+    @param bias A numerical value possibly used in calculating the fatality/removed ratio, by default 0.005.
+    @param train_data The training data used for training the model.
+    @param new_sus Amount of new suspectible individuals.
+    @param pop_in Flag used to calculate the amount of population joining the suspecitible population. Gives realism to calculations.
+    @param val_data Validation data used to calculate validation loss by comparing it to the prediction data.
+    @return The trained model, parameters gained by training, and the initialization array.
+    """
     model = Learner_SuEIR(N=N, E_0=E_0, I_0=I_0, R_0=R_0, a=a, decay=decay, bias=bias)
 
     # At the initialization we assume that there is not recovered cases.
@@ -327,6 +331,13 @@ def train_model(N, E_0, I_0, R_0, a, decay, bias, train_data, new_sus, pop_in, v
     return model, params_all, loss_all, val_loss, init, beta, gamma, sigma, mu
 
 def plot_results(confirm, true_confirm, region, deaths, true_deaths):
+    """! The function plots the confirmed and predicted cases and deaths.
+    @param confirm List of predicted cases.
+    @param true_confirm Array of confirmed cases.
+    @param region The region/state/county being validated.
+    @param deaths List of predicted deaths.
+    @param List of confirmed deaths.
+    """
     plt.figure()
     plt.plot(confirm, color = 'r', linestyle='dashed')
     plt.plot(true_confirm, color = 'b')
@@ -366,6 +377,7 @@ def generate_validation_results(parameters, params_allregion, region):
     if len(train_data)>1:
         last_confirm, last_fatality = train_data[-1][0], train_data[-1][1]
         daily_confirm = np.diff(last_confirm)
+        print(daily_confirm)
         mean_increase = np.median(daily_confirm[-7:] - daily_confirm[-14:-7])/2 + np.median(daily_confirm[-14:-7] - daily_confirm[-21:-14])/2
         # if mean_increase<1.1:
         #     pop_in = 1/5000
@@ -441,7 +453,7 @@ def generate_validation_results(parameters, params_allregion, region):
             data_confirm, data_fatality = train_data[0][0], train_data[0][1]
             # print (bias)
 
-            model, params_all, loss_all, val_loss, init, beta, gamma, sigma, mu = train_model(N, E_0, data_confirm[0], data_fatality[0], parameters['a'], parameters['decay'], bias,  train_data, new_sus, pop_in, val_data)
+            model, params_all, loss_all, val_loss, init, beta, gamma, sigma, mu = train_model(N, E_0, data_confirm[0], data_fatality[0], parameters['a'], parameters['decay'], bias, train_data, new_sus, pop_in, val_data)
 
             # using the model to forecast the fatality and confirmed cases in the next 100 days, 
             # output max_daily, last confirm and last fatality for validation

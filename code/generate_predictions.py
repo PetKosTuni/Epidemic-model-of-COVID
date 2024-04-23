@@ -8,7 +8,7 @@ os.environ['DC_STATEHOOD'] = '1'
 import us
 
 from model import Learner_SuEIR
-from data import JHU_US, JHU_global, NYTimes
+from data import JHU_US, JHU_global, NYTimes, DATASET_template
 from rolling_train_modified import rolling_train, rolling_prediction, rolling_likelihood
 from util import get_start_date
 from datetime import timedelta, datetime
@@ -32,6 +32,8 @@ parser.add_argument('--county', default = "default",
                     help='county')
 parser.add_argument('--dataset', default = "NYtimes",
                     help='nytimes')
+parser.add_argument('--dataset_filepath', default = "default",
+                        help='the filepath of the custom dataset: data/...')
 parser.add_argument('--popin', type=float, default = 0,
                     help='popin')
 args = parser.parse_args()
@@ -40,13 +42,17 @@ PRED_START_DATE = args.VAL_END_DATE
 print(args)
 
 def read_validation_files():
+    """! The function initializes the wanted datasets and directories based on the arguments given and the validation results
+    @return Returns the dataset, directory name, validation results, the range of predictions in days and a list of regions
+    """
+
     if args.level == "state":
         # Create object for states with data from NYTimes or JHU (or own dataset).
 
         if args.dataset == "NYtimes":
             data = NYTimes(level='states')
-        # elif args.dataset == "OWN_DATASET":
-        #   data = OWN_DATASET(args)
+        elif args.dataset == "CUSTOM_DATASET":
+           data = DATASET_template(args.dataset_filepath, pdata.custom_dataset_columns, level = 'states')
         else:
             data = JHU_US(level='states')
 
@@ -66,8 +72,8 @@ def read_validation_files():
 
         if args.dataset == "NYtimes":
             data = NYTimes(level='counties')
-        # elif args.dataset == "OWN_DATASET":
-        #   data = OWN_DATASET(args)
+        elif args.dataset == "CUSTOM_DATASET":
+           data = DATASET_template(args.dataset_filepath, pdata.custom_dataset_columns, level = 'counties')
         else:
             data = JHU_US(level='counties')
 
@@ -78,9 +84,10 @@ def read_validation_files():
     elif args.level == "nation":
         # Create object for nations with data from JHU (or own dataset).
 
-        data = JHU_global()
-        # if args.dataset == "OWN_DATASET":
-            #    data = OWN_DATASET(args)
+        if args.dataset == "CUSTOM_DATASET":
+           data = DATASET_template(args.dataset_filepath, pdata.custom_dataset_columns, level = 'nation')
+        else:
+            data = JHU_global()
 
         # Initialize result directories.
         val_dir = "val_results_world/"
@@ -107,6 +114,12 @@ def read_validation_files():
     return data, pred_dir, NE0_region, prediction_range, region_list
 
 def generate_training_parameters(region, data, NE0_region):
+    """! The function creates generates the training parameters needed for training the model.
+    @param region The current region (nation/state/country).
+    @param data The used dataset.
+    @param NE0_region The validation results from validation.py.
+    @return The training parameters N, E_0, data_confirm, data_fatality, a, decay, bias, train_data, new_sus, pop_in, full_data (and the current county and state)
+    """
     
     state = 0
     county = 0
@@ -127,16 +140,6 @@ def generate_training_parameters(region, data, NE0_region):
         # Get data from the state for training and full result.
         train_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, args.END_DATE, state)]
         full_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, PRED_START_DATE, state)]
-
-        # If state is in mid_dates_state list, include resurged start dates.
-        if state in mid_dates.keys():
-            # Use resurged start date if state is in mid_dates_state_resurge list. Otherwise, use 2020-09-15.
-            resurge_start_date = pdata.mid_dates_state_resurge[state] if state in pdata.mid_dates_state_resurge.keys() else "2020-09-15"
-
-            train_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, resurge_start_date, state), \
-            data.get(resurge_start_date, args.END_DATE, state)]
-            full_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, resurge_start_date, state), \
-            data.get(resurge_start_date, PRED_START_DATE, state)]
 
         # Use given decay and a value for the state. Otherwise, use values default values.
         if state in pdata.decay_state.keys():
@@ -306,6 +309,23 @@ def generate_training_parameters(region, data, NE0_region):
     return N, E_0, data_confirm, data_fatality, a, decay, bias, train_data, new_sus, pop_in, full_data, county, state
 
 def train_model(N, E_0, I_0, R_0, a, decay, bias, train_data, new_sus, pop_in, NE0_region, region, full_data, prediction_range):
+    """! The function trains the SUEIR model, and returns it and parameters gained with the trained model.
+    @param N Total population.
+    @param E_0 Initial exposed population.
+    @param I_0 Initial infected population.
+    @param R_0 Initial recovered population.
+    @param a Learning rate parameter (starting rate).
+    @param decay Learning rate parameter (responsible for progressively lowering the rate).
+    @param bias A numerical value possibly used in calculating the fatality/removed ratio, by default 0.005.
+    @param train_data The training data used for training the model.
+    @param new_sus Amount of new suspectible individuals.
+    @param pop_in Flag used to calculate the amount of population joining the suspecitible population. Gives realism to calculations.
+    @param NE0_region The validation results from validation.py.
+    @param region The current region.
+    @param full_data Data from the region for full result.
+    @param prediction_range The range how far the prediction reaches (in days).
+    @return The trained model, parameters gained by training, and the initialization array.
+    """
     
     # Create model using Learner_SuEIR.
     model = Learner_SuEIR(N=N, E_0=E_0, I_0=I_0, R_0=R_0, a=a, decay=decay, bias=bias)
@@ -323,7 +343,13 @@ def train_model(N, E_0, I_0, R_0, a, decay, bias, train_data, new_sus, pop_in, N
     return model, init, params_all, loss_all, loss_true, pred_true, confirm
 
 def plot_results(confirm, region, loss_all, loss_true, pred_true):
-
+    """! The function plots and prints information about the predictions.
+    @param confirm List of confirmed cases
+    @param region The region/state/county being validated.
+    @param loss_all List of training loss gained by training the model.
+    @param loss_true True loss.
+    @param pred_true True prediction.
+    """
     # Plot results.
     plt.figure()
     plt.plot(np.diff(np.array(confirm)))
@@ -337,8 +363,24 @@ def plot_results(confirm, region, loss_all, loss_true, pred_true):
     print ("region: ", region, " training loss: ",  \
         loss_all, loss_true," maximum death cases: ", int(pred_true[1][-1]), " maximum confirmed cases: ", int(pred_true[0][-1])) 
 
-
 def generate_prediction_frames(params_all, model, init, full_data, new_sus, prediction_range, pop_in, train_data, loss_true, pred_true, region, county, state, frames):
+    """! The function creates DataFrames for prediction data, which are then later used to write the data into csv-form.
+    @param params_all Parameters gained by training the model.
+    @param model The SUEIR model used to calculate predictions.
+    @param init A python list containing initial parameters S0, I0, E0, R0.
+    @param full_data Data from the region for full result.
+    @param new_sus Amount of new suspectible individuals.
+    @param prediction_range The range how far the prediction reaches (in days).
+    @param pop_in Flag used to calculate the amount of population joining the suspecitible population. Gives realism to calculations.
+    @param train_data The training data used for training the model.
+    @param loss_true True loss.
+    @param pred_true True prediction.
+    @param region Current region (state or nation)
+    @param county Current county (if level == "counties").
+    @param state Current state (if level == "counties"/"states").
+    @param frames the list to be filled with prediction data.
+    @return The modified dataframes list, filled with prediction data.
+    """
 
     # Add predictions to a list.
     prediction_list = []
@@ -454,6 +496,8 @@ def generate_prediction_frames(params_all, model, init, full_data, new_sus, pred
     return frames
 
 def generate_prediction_files():
+    """! The function creates the prediction results for each wanted region, state or county, and saves them in a csv file.
+    """
     
     frames = []
     data, pred_dir, NE0_region, prediction_range, region_list = read_validation_files()

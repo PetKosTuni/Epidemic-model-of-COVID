@@ -1,4 +1,6 @@
-
+# Change these values depending on the dataset implemented either in the csv-file, or here.
+custom_dataset_filepath = 'data/custom_dataset.csv'
+custom_dataset_columns = ['date', 'country', 'state', 'county', 'cases', 'deaths', 'recoveries']
 
 # Starting dates for predictions for different countries.
 START_nation = {
@@ -205,7 +207,3 @@ north_cal = [
     "San Joaquin",
     "Fresno"
 ]
-
-# Change these values depending on the dataset implemented either in the csv-file, or here.
-custom_dataset_filepath = 'data/custom_dataset.csv'
-custom_dataset_columns = ['date', 'country', 'state', 'county', 'cases', 'deaths', 'recoveries']
