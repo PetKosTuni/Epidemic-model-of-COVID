@@ -113,7 +113,6 @@ def read_validation_files():
 
     return data, pred_dir, NE0_region, prediction_range, region_list
 
-<<<<<<< HEAD
 def generate_training_parameters(region, data, NE0_region):
     """! The function creates generates the training parameters needed for training the model.
     @param region The current region (nation/state/country).
@@ -121,93 +120,7 @@ def generate_training_parameters(region, data, NE0_region):
     @param NE0_region The validation results from validation.py.
     @return The training parameters N, E_0, data_confirm, data_fatality, a, decay, bias, train_data, new_sus, pop_in, full_data (and the current county and state)
     """
-=======
-            # Add county to list if all of the following statements are true.
-                # There have been deaths on more than one day.
-                # There are more deaths than five.
-                # There are more confirmed cases than the cc_limit given to the function.
-                # Start date of data is earlier than 2020-05-01.
-            if len(death) >0 and np.max(death)>5 and np.max(confirm)>cc_limit and start_date < "2020-05-01":
-                county_list += [region]
 
-    return county_list
-
-
-
-if args.level == "state":
-    # Create object for states with data from NYTimes or JHU.
-    data = NYTimes(level='states') if args.dataset == "NYtimes" else JHU_US(level='states')
-
-    # List of US territories and cruise ships not included in states.
-    nonstate_list = ["American Samoa", "Diamond Princess", "Grand Princess", "Virgin Islands"]
-    # region_list = [state for state in data.state_list if not state in nonstate_list]
-
-    # Get middle dates for different US states and initialize result directories.
-    mid_dates = pdata.mid_dates_state
-    val_dir = "val_results_state/"
-    pred_dir = "pred_results_state/"
-
-    # If data for certain state(s) is queried.
-    if args.state != "default":
-        # Changes region_list two times. This is overridden later...
-        region_list = [args.state]
-        region_list = ["New York", "California"]
-
-        # Changes the val_dir to .../test. This results in validation file starting with "test".
-        val_dir = "val_results_state/test"
-
-elif args.level == "county":
-    # State is California as middle dates are given to different Californian counties.
-    state = "California"
-
-    # Create object for counties with data from NYTimes or JHU.
-    data = NYTimes(level='counties') if args.dataset == "NYtimes" else JHU_US(level='counties')
-
-    # Get middle dates for different counties in California and initialize result directories.
-    mid_dates = pdata.mid_dates_county
-    val_dir = "val_results_county/" 
-    pred_dir = "pred_results_county/"
-
-elif args.level == "nation":
-    # Create object for nations with data from JHU.
-    data = JHU_global()
-
-    # Get middle dates for nations and load populations of nations.
-    mid_dates = pdata.mid_dates_nation
-    with open("data/world_pop.json", 'r') as f:
-        Nation_Pop = json.load(f)
-
-    # Initialize result directories.
-    val_dir = "val_results_world/"
-    pred_dir = "pred_results_world/"
-
-    # If data for certain nation(s) is queried.
-    if args.nation != "default":
-        # Add these nations to list and change the val_dir to .../test -> validation file starts with "test".
-        region_list = [args.nation]
-        val_dir = "val_results_world/test"
-
-# Give path/name to validation file.
-json_file_name = val_dir + args.dataset + "_" + "val_params_best_END_DATE_" + args.END_DATE + "_VAL_END_DATE_" + args.VAL_END_DATE
-if not os.path.exists(json_file_name):
-    json_file_name = val_dir + "JHU" + "_" + "val_params_best_END_DATE_" + args.END_DATE + "_VAL_END_DATE_" + args.VAL_END_DATE
-
-
-
-# Open the validation file.
-with open(json_file_name, 'r') as f:
-    NE0_region = json.load(f)
-
-# Add selected regions to region_list excluding Independence, Arkansas.
-prediction_range = 100
-frame = []
-region_list = list(NE0_region.keys())
-region_list = [region for region in region_list if region != "Independence, Arkansas"]
-
-# Go through selected regions.
-for region in region_list:
->>>>>>> 16138ca636dfea13dad1ea7d5a9d6ca73d3fe22e
-    
     state = 0
     county = 0
     if args.level == "state":
