@@ -59,11 +59,7 @@ def validation_loss(model, init, params_all, train_data, val_data, new_sus, pop_
 
     val_data_confirm, val_data_fatality = val_data[0], val_data[1]
     val_size = len(val_data_confirm)
-
     pred_confirm, pred_fatality, _ = rolling_prediction(model, init, params_all, train_data, new_sus, pred_range=val_size, pop_in=pop_in)
-    # print(pred_fatality, val_data_fatality)
-    # return 0.5*loss(np.maximum(0, pred_fatality-val_data_fatality[0]), np.maximum(0, val_data_fatality-val_data_fatality[0]), smoothing=10) \
-    #  + loss(np.maximum(0, pred_confirm-val_data_confirm[0]), np.maximum(0,val_data_confirm-val_data_confirm[0]), smoothing=10)
     
     return  0.5*loss(pred_confirm, val_data_confirm, smoothing=0.1) + loss(pred_fatality, val_data_fatality, smoothing=0.1)
 
@@ -109,7 +105,7 @@ def get_region_list():
     # initial the dataloader, get region list 
     # get the directory of output validation files
     if args.level == "state":
-        
+
         if args.dataset == "NYtimes":
             data = NYTimes(level='states')
         elif args.dataset == "CUSTOM_DATASET":
@@ -119,14 +115,10 @@ def get_region_list():
 
         nonstate_list = ["American Samoa", "Diamond Princess", "Grand Princess", "Virgin Islands", "Northern Mariana Islands"]
         region_list = [state for state in data.state_list if state not in nonstate_list]
-        # region_list = mid_dates_state.keys()
-        # print(data.state_list)
         mid_dates = pdata.mid_dates_state
         write_dir = "val_results_state/" + args.dataset + "_" 
         if args.state != "default":
             region_list = [args.state]  
-            # region_list = ["New York", "California", "Illinois", "North Carolina", "Florida", "Texas", "Georgia", "Arizona", "South Carolina", "Alabama"]
-            # region_list = ["New York", "California"]
             write_dir = "val_results_state/test" + args.dataset + "_"
         
     elif args.level == "county":
@@ -148,7 +140,6 @@ def get_region_list():
 
         if args.state != "default" and args.county != "default":
             region_list = [args.county + "_" + args.state] 
-            # region_list = ["New York_New York", "Los Angeles_California", "Dallas_Texas"] 
             write_dir = "val_results_county/test" + args.dataset + "_"
 
         else:
@@ -375,8 +366,6 @@ def generate_validation_results(parameters, params_allregion, region):
         last_confirm, last_fatality = train_data[-1][0], train_data[-1][1]
         daily_confirm = np.diff(last_confirm)
         mean_increase = np.median(daily_confirm[-7:] - daily_confirm[-14:-7])/2 + np.median(daily_confirm[-14:-7] - daily_confirm[-21:-14])/2
-        # if mean_increase<1.1:
-        #     pop_in = 1/5000
         if not reopen_flag or args.level == "county":
             if np.mean(daily_confirm[-7:])<12.5 or mean_increase<1.1:
                 pop_in = 1/5000
@@ -404,13 +393,11 @@ def generate_validation_results(parameters, params_allregion, region):
     print("region: ", region, " start date: ", parameters['start_date'], " mid date: ", parameters['second_start_date'],
         " end date: ", args.END_DATE, " Validation end date: ", args.VAL_END_DATE, "mean increase: ", mean_increase, pop_in )    
 
-    # print(train_data)
     # candidate choices of N and E_0, here r = N/E_0
     Ns = np.asarray([0.2])*parameters['Pop']
     rs = np.asarray([30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 120, 150, 200, 400])
     if args.level == "county":
         rs = np.asarray([30,  40, 50, 60, 70, 80,  90, 100, 120, 150, 200, 400])
-        # rs = np.asarray([200])
 
     if args.level == "nation":
 
@@ -447,7 +434,6 @@ def generate_validation_results(parameters, params_allregion, region):
                 if nation == "US":
                     bias = 0.02
             data_confirm, data_fatality = train_data[0][0], train_data[0][1]
-            # print (bias)
 
             model, params_all, loss_all, val_loss, init, beta, gamma, sigma, mu = train_model(N, E_0, data_confirm[0], data_fatality[0], parameters['a'], parameters['decay'], bias, train_data, new_sus, pop_in, val_data)
 
@@ -456,8 +442,6 @@ def generate_validation_results(parameters, params_allregion, region):
             pred_confirm, pred_fatality, _ = rolling_prediction(model, init, params_all, train_data, new_sus, pop_in=pop_in, pred_range=100, daily_smooth=True)
             max_daily_confirm = np.max(np.diff(pred_confirm))
             pred_confirm_last, pred_fatality_last = pred_confirm[-1], pred_fatality[-1]
-            # print(np.diff(pred_fatality))
-            # print(sigma/mu)
             #prevent the model from explosion
             if pred_confirm_last >  8*train_data[-1][0][-1] or  np.diff(pred_confirm)[-1]>=np.diff(pred_confirm)[-2]:
                 val_loss = 1e8

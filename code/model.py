@@ -225,12 +225,5 @@ class Learner_SuEIR_H(Model):
         solution = solve_ivp(
             calc_grad, [0, size], init, t_eval=np.arange(0, size, 1)).y
 
-        # return pred_S, pred_E, pred_I, pred_R, pred_confirm, pred_fatality, pred_hospital
+        # return the followind variables: pred_S, pred_E, pred_I, pred_R, pred_confirm, pred_fatality, pred_hospital
         return solution[0], solution[1], solution[2], solution[3], solution[2] + solution[3], solution[5], solution[4]
-
-
-if __name__ == '__main__':
-    # m = xxx()
-    # m(None, None, 1)
-
-    pass
