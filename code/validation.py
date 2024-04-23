@@ -291,9 +291,6 @@ def generate_parameters(region, param_dict):
         val_data = data.get(args.END_DATE, args.VAL_END_DATE, country = nation)
         a, decay = pdata.FR_nation[nation]
 
-        
-        print(start_date, second_start_date, nation)
-
     return {'a': a, 'decay': decay, 'pop_in': pop_in, 'Pop': Pop, 'state': state,
              'train_data': train_data, 'reopen_flag': reopen_flag, 'val_data': val_data,
              'full_data': full_data, 'start_date': start_date, 'second_start_date': second_start_date, 'nation': nation}
@@ -377,7 +374,6 @@ def generate_validation_results(parameters, params_allregion, region):
     if len(train_data)>1:
         last_confirm, last_fatality = train_data[-1][0], train_data[-1][1]
         daily_confirm = np.diff(last_confirm)
-        print(daily_confirm)
         mean_increase = np.median(daily_confirm[-7:] - daily_confirm[-14:-7])/2 + np.median(daily_confirm[-14:-7] - daily_confirm[-21:-14])/2
         # if mean_increase<1.1:
         #     pop_in = 1/5000
