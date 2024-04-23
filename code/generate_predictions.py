@@ -193,7 +193,7 @@ for region in region_list:
              data.get(resurge_start_date, args.END_DATE, state)]
             full_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, resurge_start_date, state), \
              data.get(resurge_start_date, PRED_START_DATE, state)]
-        if state in mid_dates.keys():
+        elif state in mid_dates.keys():
             # Use resurged start date if state is in mid_dates_state_resurge list. Otherwise, use 2020-09-15.
             resurge_start_date = pdata.mid_dates_state_resurge[state] if state in pdata.mid_dates_state_resurge.keys() else "2020-09-15"
             train_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, resurge_start_date, state), \
@@ -270,7 +270,7 @@ for region in region_list:
         if args.MID_DATE != "default":
             second_start_date = args.MID_DATE
             reopen_flag = False
-        if nation in pdata.mid_dates_nation.keys():
+        elif nation in pdata.mid_dates_nation.keys():
             second_start_date = mid_dates[nation]
             reopen_flag = True
         elif nation == "Turkey":
