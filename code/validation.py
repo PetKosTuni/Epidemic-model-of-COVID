@@ -17,6 +17,12 @@ from matplotlib import pyplot as plt
 import prediction_data as pdata
 
 parser = argparse.ArgumentParser(description='validation of prediction performance for all states')
+parser.add_argument('--START_DATE', default = "default",
+                    help='start date for training models')
+parser.add_argument('--MID_DATE', default = "default",
+                    help='mid date for training models')
+parser.add_argument('--RESURGE_DATE', default = "default",
+                    help='resurge date for training models for US regions')
 parser.add_argument('--END_DATE', default = "default",
                     help='end date for training models')
 parser.add_argument('--VAL_END_DATE', default = "default",
@@ -33,6 +39,10 @@ parser.add_argument('--dataset', default = "NYtimes",
                     help='nytimes')
 parser.add_argument('--popin', type=float, default = 0,
                     help='popin')
+parser.add_argument('--bias', type=float, default = 0,
+                    help='bias')
+parser.add_argument('--pred_range', type=int, default = 100,
+                    help='range for prediction in days')
 args = parser.parse_args()
 
 print(args)
@@ -150,8 +160,16 @@ def generate_parameters(region, param_dict):
         df_Population = pd.read_csv('data/us_population.csv')
         print(state)
         Pop=df_Population[df_Population['STATE']==state]["Population"].to_numpy()[0]
-        start_date = get_start_date(data.get("2020-03-22", args.END_DATE, state),100)
-        if state in mid_dates.keys():
+        if args.START_DATE == "default":
+            start_date = get_start_date(data.get("2020-03-22", args.END_DATE, state),100)
+        else:
+            start_date = args.START_DATE
+
+        if args.MID_DATE != "default":
+            second_start_date = args.MID_DATE
+            train_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, args.END_DATE, state)]
+            reopen_flag = False
+        elif state in mid_dates.keys():
             second_start_date = mid_dates[state]
             train_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, args.END_DATE, state)]
             reopen_flag = True
@@ -160,7 +178,13 @@ def generate_parameters(region, param_dict):
             train_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, args.END_DATE, state)]
             reopen_flag = False
 
-        if state in mid_dates.keys():
+        if args.MID_DATE != "default" and args.RESURGE_DATE != "default":
+            resurge_start_date = args.RESURGE_DATE
+            train_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, resurge_start_date, state), \
+                data.get(resurge_start_date, args.END_DATE, state)]
+            full_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, resurge_start_date, state), \
+                data.get(resurge_start_date, args.VAL_END_DATE, state)]
+        elif state in mid_dates.keys():
             resurge_start_date = pdata.mid_dates_state_resurge[state] if state in pdata.mid_dates_state_resurge.keys() else "2020-09-15"
             train_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, resurge_start_date, state), \
                 data.get(resurge_start_date, args.END_DATE, state)]
@@ -184,8 +208,15 @@ def generate_parameters(region, param_dict):
 
         County_Pop = param_dict['County_Pop']
         Pop=County_Pop[key][0]
-        start_date = get_start_date(data.get("2020-03-22", args.END_DATE, state, county))
-        if state=="California" and county in mid_dates.keys():
+        if args.START_DATE == "default":
+            start_date = get_start_date(data.get("2020-03-22", args.END_DATE, state, county))
+        else:
+            start_date = args.START_DATE
+
+        if args.MID_DATE != "default":
+            second_start_date = args.MID_DATE
+            reopen_flag = False
+        elif state=="California" and county in mid_dates.keys():
             second_start_date = mid_dates[county]
             reopen_flag = True
         elif state in pdata.mid_dates_state.keys() and not (state == "Arkansas" or state == "Montana"):
@@ -208,7 +239,13 @@ def generate_parameters(region, param_dict):
             decay = 0.03
         pop_in = 1/400
 
-        if state in pdata.mid_dates_state.keys():
+        if args.MID_DATE != "default" and args.RESURGE_DATE != "default":
+            resurge_start_date = args.RESURGE_DATE
+            train_data = [data.get(start_date, second_start_date, state, county), data.get(second_start_date, resurge_start_date, state, county), \
+                data.get(resurge_start_date, args.END_DATE, state, county)]
+            full_data = [data.get(start_date, second_start_date, state, county), data.get(second_start_date, resurge_start_date, state, county), \
+                data.get(resurge_start_date, args.VAL_END_DATE, state, county)]
+        elif state in pdata.mid_dates_state.keys():
             resurge_start_date = pdata.mid_dates_state_resurge[state] if state in pdata.mid_dates_state_resurge.keys() else "2020-09-15"
             train_data = [data.get(start_date, second_start_date, state, county), data.get(second_start_date, resurge_start_date, state, county), \
                 data.get(resurge_start_date, args.END_DATE, state, county)]
@@ -219,7 +256,10 @@ def generate_parameters(region, param_dict):
         nation = str(region)
         Nation_Pop = param_dict['Nation_Pop']
         Pop = Nation_Pop["United States"] if nation == "US" else Nation_Pop[nation]
-        if nation in pdata.mid_dates_nation.keys():
+        if args.MID_DATE != "default":
+            second_start_date = args.MID_DATE
+            reopen_flag = False
+        elif nation in pdata.mid_dates_nation.keys():
             second_start_date = mid_dates[nation]
             reopen_flag = True
         elif nation == "Turkey":
@@ -230,12 +270,20 @@ def generate_parameters(region, param_dict):
             reopen_flag = False
         pop_in = 1/2000 if nation == "Germany" else 1/400
 
-        start_date = pdata.START_nation[nation]
+        if args.START_DATE == "default":
+            start_date = pdata.START_nation[nation]
+        else:
+            start_date = args.START_DATE
+        
         train_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, args.END_DATE, nation)]
         full_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, args.END_DATE, nation)]
-
+        
         if nation=="US":
-            resurge_start_date = "2020-09-15"
+            if args.RESURGE_DATE != "default":
+                resurge_start_date = args.RESURGE_DATE
+            else:
+                resurge_start_date = "2020-09-15"
+            
             train_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, resurge_start_date, nation), data.get(resurge_start_date, args.END_DATE, nation)]
             full_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, resurge_start_date, nation), data.get(resurge_start_date, args.END_DATE, nation)]
 
@@ -333,6 +381,8 @@ def generate_validation_results(parameters, params_allregion, region):
                     bias = 0.02
                 if nation == "US":
                     bias = 0.02
+            if args.bias > 0:
+                bias = args.bias
             data_confirm, data_fatality = train_data[0][0], train_data[0][1]
             model = Learner_SuEIR(N=N, E_0=E_0, I_0=data_confirm[0], R_0=data_fatality[0], a=parameters['a'], decay=parameters['decay'], bias=bias)
 
@@ -351,7 +401,7 @@ def generate_validation_results(parameters, params_allregion, region):
 
             # using the model to forecast the fatality and confirmed cases in the next 100 days, 
             # output max_daily, last confirm and last fatality for validation
-            pred_confirm, pred_fatality, _ = rolling_prediction(model, init, params_all, train_data, new_sus, pop_in=pop_in, pred_range=100, daily_smooth=True)
+            pred_confirm, pred_fatality, _ = rolling_prediction(model, init, params_all, train_data, new_sus, pop_in=pop_in, pred_range=args.pred_range, daily_smooth=True)
             max_daily_confirm = np.max(np.diff(pred_confirm))
             pred_confirm_last, pred_fatality_last = pred_confirm[-1], pred_fatality[-1]
             #prevent the model from explosion
