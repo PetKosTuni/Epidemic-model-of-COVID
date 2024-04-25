@@ -19,7 +19,7 @@ class TestConvertJHU(unittest.TestCase):
         self.assertIsInstance(df, pd.DataFrame)
 
         # Check if the returned DataFrame has some rows
-        self.assertTrue(len(df) > 0)
+        self.assertGreater(len(df), 0)
 
         # Check if the returned DataFrame has the required columns
         self.assertIn('Country_Region', df.columns)
@@ -39,7 +39,7 @@ class TestConvertJHU(unittest.TestCase):
         self.assertIsInstance(df, pd.DataFrame)
 
         # Check if the returned DataFrame has some rows
-        self.assertTrue(len(df) > 0)
+        self.assertGreater(len(df), 0)
 
         # Check if the returned DataFrame has the required columns
         self.assertIn('state', df.columns)
@@ -58,7 +58,7 @@ class TestConvertJHU(unittest.TestCase):
         self.assertIsInstance(df, pd.DataFrame)
 
         # Check if the returned DataFrame has some rows
-        self.assertTrue(len(df) > 0)
+        self.assertGreater(len(df), 0)
 
         # Check if the returned DataFrame has the required columns
         self.assertIn('county', df.columns)

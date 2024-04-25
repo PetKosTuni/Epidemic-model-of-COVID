@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.optimize import minimize
 from model import Learner_SuEIR, Learner_SuEIR_H
-from data import NYTimes, Hospital_US, JHU_global
+from data import NYTimes, HospitalUs, JHU_global
 from matplotlib import pyplot as plt
 from util import ensure_float64
 
