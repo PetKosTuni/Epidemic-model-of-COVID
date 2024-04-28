@@ -39,7 +39,7 @@ def create_parser():
     parser.add_argument('--popin', type=float, default = 0,
                         help='popin')
     args = parser.parse_args()
-    
+        
     print(args)
     return args
 
@@ -89,6 +89,8 @@ def get_county_list(cc_limit=200, pop_limit=50000):
             train_data = data.get("2020-03-22", args.END_DATE, state, county)
             confirm, death = train_data[0], train_data[1]
             start_date = get_start_date(train_data)
+            
+            #Dont include Lassen in your custom datasets
             if len(death) > 0 and np.max(death) >=0 and np.max(confirm) > cc_limit and start_date < "2020-05-10" and county != "Lassen":
                 county_list += [region]
 
