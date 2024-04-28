@@ -45,8 +45,6 @@ def create_parser():
                         help='bias')
     parser.add_argument('--pred_range', type=int, default = 100,
                         help='range for prediction in days')
-    parser.add_argument('--dataset', default = "NYtimes",
-                        help='nytimes')
     parser.add_argument('--dataset_filepath', default = "default",
                         help='the filepath of the custom dataset: data/...')
     #parser.add_argument('--dataset_columns', default = "default",
