@@ -172,6 +172,10 @@ def get_region_list():
 
         with open("data/world_pop.json", 'r') as f:
             Nation_Pop = json.load(f)
+    
+    # Raises descriptive error if used arg level is not found.
+    else:
+        raise ValueError(f"level '{args.level}' is invalid")
 
     return {'region_list': region_list, 'mid_dates': mid_dates, 'write_dir': write_dir, 'data': data, 'state': state, 'County_Pop': County_Pop, 'Nation_Pop': Nation_Pop}
 
@@ -194,7 +198,10 @@ def generate_training_parameters(region, param_dict):
         state = str(region)
         df_Population = pd.read_csv('data/us_population.csv')
         print(state)
-        Pop=df_Population[df_Population['STATE']==state]["Population"].to_numpy()[0]
+        try:
+            Pop=df_Population[df_Population['STATE']==state]["Population"].to_numpy()[0]
+        except IndexError as e:
+            raise IndexError(f"{str(e)}\nGIVEN STATE '{state}' NOT FOUND")
         if args.START_DATE == "default":
             start_date = get_start_date(data.get("2020-03-22", args.END_DATE, state = state),100)
         else:
