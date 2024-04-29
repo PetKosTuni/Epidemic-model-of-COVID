@@ -153,7 +153,7 @@ def write_val_to_json(params_allregion, write_file_name_all, write_file_name_bes
     for _region in params_allregion.keys():
         params = np.asarray(params_allregion[_region])
         min_val, min_ind = np.min(params[:,2]), np.argmin(params[:,2]) 
-        good_inds = np.where(params[:,2]<min_val+limit)[0]
+        good_inds = np.nonzero(params[:,2]<min_val+limit)[0]
         params = params[good_inds,:]
         pick_ind = 3 # 3: last confirm; 4: last death; 5: maximum daily
         candidates = params[:,pick_ind].tolist()
@@ -247,7 +247,7 @@ def get_start_date(data, limit=10):
     @param data  the dataset of which the start date is wanted. Seems that when called in validation, data is confirmed cases.
     @param limit  the value which is smaller than any wanted value from the data -dataset. Default is 10.
     """
-    ind = np.where(data[0]>limit)[0]
+    ind = np.nonzero(data[0]>limit)[0]
     if len(ind)==0:
         START_DATE = "2020-06-01"
     else:
