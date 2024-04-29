@@ -121,7 +121,7 @@ class Learner_SEIR(Model):
         @param R_0  Initial recovered population
         @param a  Learning rate parameter (starting rate)
         @param decay  Learning rate parameter (responsible for progressively lowering the rate)
-        @param bias  A numerical value possibly used in calculating the fatality/removed ratio, by default 0.005
+        @param bias  A numerical value possibly used in calculating the fatality/removed ratio, by default 0
         """
         self.N = N
         self.E_0 = E_0
@@ -173,7 +173,7 @@ class Learner_SEIR(Model):
         # return pred_S, pred_E, pred_I, pred_R, pred_confirmed, pred_fatality
         return solution.y[0], solution.y[1], solution.y[2], solution.y[3], solution.y[2] + solution.y[3], temp_F
 
-
+#Remember to add option to choose different models in tutorial
 class Learner_SuEIR_H(Model):
     """! Class for SuEIR_H (Susceptible, Unreported, Exposed, Infected, Recovered, Hospitalized) model learner.
     

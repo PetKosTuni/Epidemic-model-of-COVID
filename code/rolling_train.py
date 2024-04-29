@@ -4,7 +4,7 @@ from model import Learner_SuEIR, Learner_SuEIR_H
 from data import NYTimes, HospitalUs, JHU_global
 from matplotlib import pyplot as plt
 
-# This file constains helpful functions for model training and predicting data.
+# This file consists of helpful functions for model training and predicting data.
 
 def loss(pred, target, smoothing=10):
     """! Mean squared logarithmic error (MSLE) -function for calculating loss for training model.
