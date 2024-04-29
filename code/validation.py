@@ -8,7 +8,7 @@ os.environ['DC_STATEHOOD'] = '1'
 import us
 
 from model import Learner_SuEIR
-from data import JHU_US, JHU_global, NYTimes
+from data import JHU_US, JHU_global, NYTimes, DATASET_template
 from rolling_train_modified import rolling_train, rolling_prediction, loss
 from util import get_start_date, write_val_to_json
 from matplotlib import pyplot as plt
@@ -16,37 +16,42 @@ from matplotlib import pyplot as plt
 # Import hard coded dates, decays and "a" values.
 import prediction_data as pdata
 
-parser = argparse.ArgumentParser(description='validation of prediction performance for all states')
-parser.add_argument('--START_DATE', default = "default",
-                    help='start date for training models')
-parser.add_argument('--MID_DATE', default = "default",
-                    help='mid date for training models')
-parser.add_argument('--RESURGE_DATE', default = "default",
-                    help='resurge date for training models for US regions')
-parser.add_argument('--END_DATE', default = "default",
-                    help='end date for training models')
-parser.add_argument('--VAL_END_DATE', default = "default",
-                    help='end date for training models')
-parser.add_argument('--level', default = "state",
-                    help='state, nation or county')
-parser.add_argument('--state', default = "default",
-                    help='state')
-parser.add_argument('--nation', default = "default",
-                    help='nation')
-parser.add_argument('--county', default = "default",
-                    help='county')
-parser.add_argument('--dataset', default = "NYtimes",
-                    help='nytimes')
-parser.add_argument('--popin', type=float, default = 0,
-                    help='popin')
-parser.add_argument('--bias', type=float, default = 0,
-                    help='bias')
-parser.add_argument('--pred_range', type=int, default = 100,
-                    help='range for prediction in days')
-args = parser.parse_args()
+def create_parser():
 
-print(args)
-
+    parser = argparse.ArgumentParser(description='validation of prediction performance for all states')
+    parser.add_argument('--START_DATE', default = "default",
+                        help='start date for training models')
+    parser.add_argument('--MID_DATE', default = "default",
+                        help='mid date for training models')
+    parser.add_argument('--RESURGE_DATE', default = "default",
+                        help='resurge date for training models for US regions')
+    parser.add_argument('--END_DATE', default = "default",
+                        help='end date for training models')
+    parser.add_argument('--VAL_END_DATE', default = "default",
+                        help='end date for training models')
+    parser.add_argument('--level', default = "state",
+                        help='state, nation or county')
+    parser.add_argument('--state', default = "default",
+                        help='state')
+    parser.add_argument('--nation', default = "default",
+                        help='nation')
+    parser.add_argument('--county', default = "default",
+                        help='county')
+    parser.add_argument('--dataset', default = "NYtimes",
+                        help='nytimes')
+    parser.add_argument('--popin', type=float, default = 0,
+                        help='popin')
+    parser.add_argument('--bias', type=float, default = 0,
+                        help='bias')
+    parser.add_argument('--pred_range', type=int, default = 100,
+                        help='range for prediction in days')
+    parser.add_argument('--dataset_filepath', default = "default",
+                        help='the filepath of the custom dataset: data/...')
+    #parser.add_argument('--dataset_columns', default = "default",
+                        # help='the column names of the custom dataset in a list form: [..., ..., ...]')
+    args = parser.parse_args()
+    print(args)
+    return args
 # severe_state = ["Florida"]  
 
 def validation_loss(model, init, params_all, train_data, val_data, new_sus, pop_in):
@@ -75,23 +80,33 @@ def get_county_list(cc_limit=200, pop_limit=50000):
     """
     
     non_county_list = ["Puerto Rico", "American Samoa", "Guam", "Northern Mariana Islands", "Virgin Islands", "Diamond Princess", "Grand Princess"]
-    data = NYTimes(level='counties') if args.dataset == "NYtimes" else JHU_US(level='counties')
+
+    if args.dataset == "NYtimes":
+        data = NYTimes(level='counties')
+    elif args.dataset == "CUSTOM_DATASET":
+        data = DATASET_template(args.dataset_filepath, pdata.custom_dataset_columns, level = 'counties')
+    else:
+        data = JHU_US(level='counties')
+    
     with open("data/county_pop.json", 'r') as f:
         County_Pop = json.load(f)
+    
     county_list = []
     for region in County_Pop.keys():
         county, state = region.split("_")
         if County_Pop[region][0]>=pop_limit and state not in non_county_list:        
-            train_data = data.get("2020-03-22", args.END_DATE, state, county)
+            train_data = data.get("2020-03-22", args.END_DATE, state = state, county = county)
             confirm, death = train_data[0], train_data[1]
             start_date = get_start_date(train_data)
+            
+            #Dont include Lassen in your custom datasets
             if len(death) > 0 and np.max(death) >=0 and np.max(confirm) > cc_limit and start_date < "2020-05-10" and county != "Lassen":
                 county_list += [region]
 
     return county_list
 
 def get_region_list():
-    """! The function creates a list of regions, nations or counties depending on input parameters. It also creates the names for the directories where the validation files are written.
+    """! The function creates a list of nations, states or counties depending on input parameters. It also creates the names for the directories where the validation files are written.
     @return A dictionary containing parameters, which depend on whether a state, county or nation was chosen.
     """
 
@@ -101,7 +116,14 @@ def get_region_list():
     # initial the dataloader, get region list 
     # get the directory of output validation files
     if args.level == "state":
-        data = NYTimes(level='states') if args.dataset == "NYtimes" else JHU_US(level='states')
+
+        if args.dataset == "NYtimes":
+            data = NYTimes(level='states')
+        elif args.dataset == "CUSTOM_DATASET":
+            data = DATASET_template(args.dataset_filepath, pdata.custom_dataset_columns, level = 'states')
+        else:
+            data = JHU_US(level='states')
+
         nonstate_list = ["American Samoa", "Diamond Princess", "Grand Princess", "Virgin Islands", "Northern Mariana Islands"]
         region_list = [state for state in data.state_list if state not in nonstate_list]
         mid_dates = pdata.mid_dates_state
@@ -112,7 +134,14 @@ def get_region_list():
         
     elif args.level == "county":
         state = "California"
-        data = NYTimes(level='counties') if args.dataset == "NYtimes" else JHU_US(level='counties')
+
+        if args.dataset == "NYtimes":
+            data = NYTimes(level='counties')
+        elif args.dataset == "CUSTOM_DATASET":
+            data = DATASET_template(args.dataset_filepath, pdata.custom_dataset_columns, level = 'counties')
+        else:
+            data = JHU_US(level='counties')
+        
         mid_dates = pdata.mid_dates_county
         with open("data/county_pop.json", 'r') as f:
             County_Pop = json.load(f)       
@@ -127,7 +156,12 @@ def get_region_list():
             write_dir = "val_results_county/" + args.dataset + "_"
 
     elif args.level == "nation":
-        data = JHU_global()
+        
+        if args.dataset == "CUSTOM_DATASET":
+            data = DATASET_template(args.dataset_filepath, pdata.custom_dataset_columns, level = 'nation')
+        else:
+            data = JHU_global()
+
         region_list = pdata.START_nation.keys()
         mid_dates = pdata.mid_dates_nation
         write_dir = "val_results_world/" + args.dataset + "_" 
@@ -138,10 +172,14 @@ def get_region_list():
 
         with open("data/world_pop.json", 'r') as f:
             Nation_Pop = json.load(f)
+    
+    # Raises descriptive error if used arg level is not found.
+    else:
+        raise ValueError(f"level '{args.level}' is invalid")
 
     return {'region_list': region_list, 'mid_dates': mid_dates, 'write_dir': write_dir, 'data': data, 'state': state, 'County_Pop': County_Pop, 'Nation_Pop': Nation_Pop}
 
-def generate_parameters(region, param_dict):
+def generate_training_parameters(region, param_dict):
     """! The function creates a dictionary of variables, such as the a and decay parameters, to use when generating validation results.
     @param region The current region (state, county or nation) which is used to generate validation results.
     @param param_dict A dictionary that contains needed parameters. Result of refactoring.
@@ -150,48 +188,53 @@ def generate_parameters(region, param_dict):
 
     # Initialize full_data.
     full_data = 0
-
     nation = 0
     state = param_dict['state']
     mid_dates = param_dict['mid_dates']
     data = param_dict['data']
+
     if args.level == "state":
+
         state = str(region)
         df_Population = pd.read_csv('data/us_population.csv')
         print(state)
-        Pop=df_Population[df_Population['STATE']==state]["Population"].to_numpy()[0]
+        try:
+            Pop=df_Population[df_Population['STATE']==state]["Population"].to_numpy()[0]
+        except IndexError as e:
+            raise IndexError(f"{str(e)}\nGIVEN STATE '{state}' NOT FOUND")
         if args.START_DATE == "default":
-            start_date = get_start_date(data.get("2020-03-22", args.END_DATE, state),100)
+            start_date = get_start_date(data.get("2020-03-22", args.END_DATE, state = state),100)
         else:
             start_date = args.START_DATE
 
         if args.MID_DATE != "default":
             second_start_date = args.MID_DATE
-            train_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, args.END_DATE, state)]
+            train_data = [data.get(start_date, second_start_date, state = state), data.get(second_start_date, args.END_DATE, state = state)]
             reopen_flag = False
         elif state in mid_dates.keys():
             second_start_date = mid_dates[state]
-            train_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, args.END_DATE, state)]
+            train_data = [data.get(start_date, second_start_date, state = state), data.get(second_start_date, args.END_DATE, state = state)]
             reopen_flag = True
+            
         else:
             second_start_date = "2020-08-30"
-            train_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, args.END_DATE, state)]
+            train_data = [data.get(start_date, second_start_date, state = state), data.get(second_start_date, args.END_DATE, state = state)]
             reopen_flag = False
 
         if args.MID_DATE != "default" and args.RESURGE_DATE != "default":
             resurge_start_date = args.RESURGE_DATE
-            train_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, resurge_start_date, state), \
-                data.get(resurge_start_date, args.END_DATE, state)]
-            full_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, resurge_start_date, state), \
-                data.get(resurge_start_date, args.VAL_END_DATE, state)]
+            train_data = [data.get(start_date, second_start_date, state = state), data.get(second_start_date, resurge_start_date, state = state), \
+                data.get(resurge_start_date, args.END_DATE, state = state)]
+            full_data = [data.get(start_date, second_start_date, state = state), data.get(second_start_date, resurge_start_date, state = state), \
+                data.get(resurge_start_date, args.VAL_END_DATE, state = state)]
         elif state in mid_dates.keys():
             resurge_start_date = pdata.mid_dates_state_resurge[state] if state in pdata.mid_dates_state_resurge.keys() else "2020-09-15"
-            train_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, resurge_start_date, state), \
-                data.get(resurge_start_date, args.END_DATE, state)]
-            full_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, resurge_start_date, state), \
-                data.get(resurge_start_date, args.VAL_END_DATE, state)]
+            train_data = [data.get(start_date, second_start_date, state = state), data.get(second_start_date, resurge_start_date, state = state), \
+                data.get(resurge_start_date, args.END_DATE, state = state)]
+            full_data = [data.get(start_date, second_start_date, state = state), data.get(second_start_date, resurge_start_date, state = state), \
+                data.get(resurge_start_date, args.VAL_END_DATE, state = state)]
 
-        val_data = data.get(args.END_DATE, args.VAL_END_DATE, state)
+        val_data = data.get(args.END_DATE, args.VAL_END_DATE, state = state)
         if state in pdata.decay_state.keys():
             a, decay = pdata.decay_state[state][0], pdata.decay_state[state][1]
         else:
@@ -202,6 +245,7 @@ def generate_parameters(region, param_dict):
             pop_in = 0.01
             
     elif args.level == "county":
+
         county, state = region.split("_")
         region = county + ", " + state
         key = county + "_" + state
@@ -209,7 +253,7 @@ def generate_parameters(region, param_dict):
         County_Pop = param_dict['County_Pop']
         Pop=County_Pop[key][0]
         if args.START_DATE == "default":
-            start_date = get_start_date(data.get("2020-03-22", args.END_DATE, state, county))
+            start_date = get_start_date(data.get("2020-03-22", args.END_DATE, state = state, county = county))
         else:
             start_date = args.START_DATE
 
@@ -227,10 +271,10 @@ def generate_parameters(region, param_dict):
             reopen_flag = False
 
         if start_date < "2020-05-10":
-            train_data = [data.get(start_date, second_start_date, state, county), data.get(second_start_date, args.END_DATE, state, county)]
+            train_data = [data.get(start_date, second_start_date, state = state, county = county), data.get(second_start_date, args.END_DATE, state = state, county = county)]
         else:
-            train_data = [data.get(start_date, args.END_DATE, state, county)]
-        val_data = data.get(args.END_DATE, args.VAL_END_DATE, state, county)
+            train_data = [data.get(start_date, args.END_DATE, state = state, county = county)]
+        val_data = data.get(args.END_DATE, args.VAL_END_DATE, state = state, county = county)
         if state in pdata.decay_state.keys():
             a, decay = pdata.decay_state[state][0], pdata.decay_state[state][1]
         else:
@@ -241,30 +285,34 @@ def generate_parameters(region, param_dict):
 
         if args.MID_DATE != "default" and args.RESURGE_DATE != "default":
             resurge_start_date = args.RESURGE_DATE
-            train_data = [data.get(start_date, second_start_date, state, county), data.get(second_start_date, resurge_start_date, state, county), \
-                data.get(resurge_start_date, args.END_DATE, state, county)]
-            full_data = [data.get(start_date, second_start_date, state, county), data.get(second_start_date, resurge_start_date, state, county), \
-                data.get(resurge_start_date, args.VAL_END_DATE, state, county)]
+            train_data = [data.get(start_date, second_start_date, state = state, county = county), data.get(second_start_date, resurge_start_date, state = state, county = county), \
+                data.get(resurge_start_date, args.END_DATE, state = state, county = county)]
+            full_data = [data.get(start_date, second_start_date, state = state, county = county), data.get(second_start_date, resurge_start_date, state = state, county = county), \
+                data.get(resurge_start_date, args.VAL_END_DATE, state = state, county = county)]
         elif state in pdata.mid_dates_state.keys():
             resurge_start_date = pdata.mid_dates_state_resurge[state] if state in pdata.mid_dates_state_resurge.keys() else "2020-09-15"
-            train_data = [data.get(start_date, second_start_date, state, county), data.get(second_start_date, resurge_start_date, state, county), \
-                data.get(resurge_start_date, args.END_DATE, state, county)]
-            full_data = [data.get(start_date, second_start_date, state, county), data.get(second_start_date, resurge_start_date, state, county), \
-                data.get(resurge_start_date, args.VAL_END_DATE, state, county)]
+            train_data = [data.get(start_date, second_start_date, state = state, county = county), data.get(second_start_date, resurge_start_date, state = state, county = county), \
+                data.get(resurge_start_date, args.END_DATE, state = state, county = county)]
+            full_data = [data.get(start_date, second_start_date, state = state, county = county), data.get(second_start_date, resurge_start_date, state = state, county = county), \
+                data.get(resurge_start_date, args.VAL_END_DATE, state = state, county = county)]
 
     elif args.level == "nation":
+
         nation = str(region)
         Nation_Pop = param_dict['Nation_Pop']
         Pop = Nation_Pop["United States"] if nation == "US" else Nation_Pop[nation]
+
         if args.MID_DATE != "default":
             second_start_date = args.MID_DATE
             reopen_flag = False
         elif nation in pdata.mid_dates_nation.keys():
             second_start_date = mid_dates[nation]
             reopen_flag = True
+
         elif nation == "Turkey":
             second_start_date = "2020-06-07"
             reopen_flag = False
+
         else:
             second_start_date = "2020-07-30"
             reopen_flag = False
@@ -275,8 +323,8 @@ def generate_parameters(region, param_dict):
         else:
             start_date = args.START_DATE
         
-        train_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, args.END_DATE, nation)]
-        full_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, args.END_DATE, nation)]
+        train_data = [data.get(start_date, second_start_date, country = nation), data.get(second_start_date, args.END_DATE, country = nation)]
+        full_data = [data.get(start_date, second_start_date, country = nation), data.get(second_start_date, args.END_DATE, country = nation)]
         
         if nation=="US":
             if args.RESURGE_DATE != "default":
@@ -284,22 +332,82 @@ def generate_parameters(region, param_dict):
             else:
                 resurge_start_date = "2020-09-15"
             
-            train_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, resurge_start_date, nation), data.get(resurge_start_date, args.END_DATE, nation)]
-            full_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, resurge_start_date, nation), data.get(resurge_start_date, args.END_DATE, nation)]
+            train_data = [data.get(start_date, second_start_date, country = nation), data.get(second_start_date, resurge_start_date, country = nation), data.get(resurge_start_date, args.END_DATE, country = nation)]
+            full_data = [data.get(start_date, second_start_date, country = nation), data.get(second_start_date, resurge_start_date, country = nation), data.get(resurge_start_date, args.END_DATE, country = nation)]
 
-        val_data = data.get(args.END_DATE, args.VAL_END_DATE, nation)
+        val_data = data.get(args.END_DATE, args.VAL_END_DATE, country = nation)
         a, decay = pdata.FR_nation[nation]
-
+    
     return {'a': a, 'decay': decay, 'pop_in': pop_in, 'Pop': Pop, 'state': state,
              'train_data': train_data, 'reopen_flag': reopen_flag, 'val_data': val_data,
              'full_data': full_data, 'start_date': start_date, 'second_start_date': second_start_date, 'nation': nation}
 
-def generate_validation_results(parameters, params_allregion, region):
-    """! The function fills the params_allregion dictionary with validation results per region.
-    @param parameters A dictionary that contains needed parameters. Result of refactoring.
-    @param params_allregion A dictionary that will contain all the validation results from all the wanted regions after modification.
+def train_model(N, E_0, I_0, R_0, a, decay, bias, train_data, new_sus, pop_in, val_data):
+    """! The function trains the SUEIR model, and returns it and parameters gained with the trained model.
+    @param N Total population.
+    @param E_0 Initial exposed population.
+    @param I_0 Initial infected population.
+    @param R_0 Initial recovered population.
+    @param a Learning rate parameter (starting rate).
+    @param decay Learning rate parameter (responsible for progressively lowering the rate).
+    @param bias A numerical value possibly used in calculating the fatality/removed ratio, by default 0.005.
+    @param train_data The training data used for training the model.
+    @param new_sus Amount of new suspectible individuals.
+    @param pop_in Flag used to calculate the amount of population joining the suspecitible population. Gives realism to calculations.
+    @param val_data Validation data used to calculate validation loss by comparing it to the prediction data.
+    @return The trained model, parameters gained by training, and the initialization array.
+    """
+    model = Learner_SuEIR(N=N, E_0=E_0, I_0=I_0, R_0=R_0, a=a, decay=decay, bias=bias)
+
+    # At the initialization we assume that there is not recovered cases.
+    init = [N-E_0-I_0-R_0, E_0, I_0, R_0]
+    print(init)
+    # train the model using the candidate N and E_0, then compute the validation loss
+    params_all, loss_all = rolling_train(model, init, train_data, new_sus, pop_in=pop_in)
+    val_loss = validation_loss(model, init, params_all, train_data, val_data, new_sus, pop_in=pop_in)
+
+    for params in params_all:
+        beta, gamma, sigma, mu = params
+        # we cannot allow mu>sigma otherwise the model is not valid
+        if mu>sigma:
+            val_loss = 1e6
+
+    return model, params_all, loss_all, val_loss, init, beta, gamma, sigma, mu
+
+def plot_results(confirm, true_confirm, region, deaths, true_deaths):
+    """! The function plots the confirmed and predicted cases and deaths.
+    @param confirm List of predicted cases.
+    @param true_confirm Array of confirmed cases.
+    @param region The region/state/county being validated.
+    @param deaths List of predicted deaths.
+    @param List of confirmed deaths.
+    """
+    plt.figure()
+    plt.plot(confirm, color = 'r', linestyle='dashed')
+    plt.plot(true_confirm, color = 'b')
+    plt.xlabel('Days')
+    plt.ylabel('Confirmed cases') 
+    plt.title('Daily increase of confirmed cases in ' + region)
+    plt.legend(labels = ['Predicted cases', 'Confirmed cases'])
+    plt.savefig("figure_"+args.level+"/daily_increase.pdf")
+    plt.close()
+    
+    plt.figure()
+    plt.plot(deaths, color = 'r', linestyle='dashed')
+    plt.plot(true_deaths, color = 'b')
+    plt.xlabel('Days')
+    plt.ylabel('Deaths') 
+    plt.title('Daily increase of deaths in ' + region)
+    plt.legend(labels = ['Predicted deaths', 'Confirmed deaths'])
+    plt.savefig("figure_"+args.level+"/daily_increase_death.pdf")
+    plt.close()
+
+def generate_validation_results(parameters, all_validation_results, region):
+    """! The function fills the all_validation_results dictionary with validation results per region.
+    @param parameters A dictionary that contains needed training parameters. Result of refactoring.
+    @param all_validation_results A dictionary that will contain all the validation results from all the wanted regions after modification.
     @param region The current region (state, county or nation) which is used to generate validation results.
-    @return The modified params_allregion dictionary.
+    @return The modified all_validation_results dictionary.
     """
 
     pop_in = parameters['pop_in']
@@ -383,21 +491,9 @@ def generate_validation_results(parameters, params_allregion, region):
                     bias = 0.02
             if args.bias > 0:
                 bias = args.bias
+                
             data_confirm, data_fatality = train_data[0][0], train_data[0][1]
-            model = Learner_SuEIR(N=N, E_0=E_0, I_0=data_confirm[0], R_0=data_fatality[0], a=parameters['a'], decay=parameters['decay'], bias=bias)
-
-            # At the initialization we assume that there is not recovered cases.
-            init = [N-E_0-data_confirm[0]-data_fatality[0], E_0, data_confirm[0], data_fatality[0]]
-            print(init)
-            # train the model using the candidate N and E_0, then compute the validation loss
-            params_all, loss_all = rolling_train(model, init, train_data, new_sus, pop_in=pop_in)
-            val_loss = validation_loss(model, init, params_all, train_data, val_data, new_sus, pop_in=pop_in)
-
-            for params in params_all:
-                beta, gamma, sigma, mu = params
-                # we cannot allow mu>sigma otherwise the model is not valid
-                if mu>sigma:
-                    val_loss = 1e6
+            model, params_all, loss_all, val_loss, init, beta, gamma, sigma, mu = train_model(N, E_0, data_confirm[0], data_fatality[0], parameters['a'], parameters['decay'], bias, train_data, new_sus, pop_in, val_data)
 
             # using the model to forecast the fatality and confirmed cases in the next 100 days, 
             # output max_daily, last confirm and last fatality for validation
@@ -418,26 +514,18 @@ def generate_validation_results(parameters, params_allregion, region):
             deaths = train_data[0][1][0:-1].tolist() + train_data[-1][1][0:-1].tolist() + pred_fatality.tolist()
             true_deaths =  train_data[0][1][0:-1].tolist() + train_data[-1][1][0:-1].tolist() + val_data[1][0:-1].tolist()
             #When the smallest validation loss yet is found, the plots are overwritten
+
             if val_loss < min_val_loss:
-                plt.figure()
-                plt.plot(confirm)
-                plt.plot(true_confirm)
-                plt.savefig("figure_"+args.level+"/daily_increase.pdf")
-                plt.close()
-                plt.figure()
-                plt.plot(deaths)
-                plt.plot(true_deaths)
-                plt.savefig("figure_"+args.level+"/daily_increase_death.pdf")
-                plt.close()
+                plot_results(confirm, true_confirm, region, deaths, true_deaths)
             min_val_loss = np.minimum(val_loss, min_val_loss)
             # print(val_loss)
 
-    params_allregion[region] = val_log
+    all_validation_results[region] = val_log
     print (np.asarray(val_log))
     best_log = np.array(val_log)[np.argmin(np.array(val_log)[:,2]),:]
     print("Best Val loss: ", best_log[2], " Last CC: ", best_log[3], " Last FC: ", best_log[4], " Max inc Confirm: ", best_log[5] )
 
-    return params_allregion
+    return all_validation_results
 
 def generate_validation_files():
     """! The function creates the validation results for each region, state or county, and saves them in json-files.
@@ -446,7 +534,7 @@ def generate_validation_files():
     region_list_dict = get_region_list()
     write_directory = region_list_dict['write_dir']
     region_list = region_list_dict['region_list']
-    parameters_from_all_regions = {}
+    all_validation_results = {}
 
     for region in region_list:
 
@@ -455,17 +543,17 @@ def generate_validation_files():
         # get the start date, and second start date
         # get the parameters a and decay
         
-        parameters = generate_parameters(region, region_list_dict)
+        training_parameters = generate_training_parameters(region, region_list_dict)
         
-        print(len(parameters['train_data']))
+        print(len(training_parameters['train_data']))
         
-        parameters_from_all_regions = generate_validation_results(parameters, parameters_from_all_regions, region)
+        all_validation_results = generate_validation_results(training_parameters, all_validation_results, region)
 
     # write all validation results into files
     write_file_name_all = write_directory + "val_params_" + "END_DATE_" + args.END_DATE + "_VAL_END_DATE_" + args.VAL_END_DATE
     write_file_name_best = write_directory + "val_params_best_" + "END_DATE_" + args.END_DATE + "_VAL_END_DATE_" + args.VAL_END_DATE
 
-    write_val_to_json(parameters_from_all_regions, write_file_name_all, write_file_name_best)
+    write_val_to_json(all_validation_results, write_file_name_all, write_file_name_best)
 
 # The main functionality of the file happens here. At the end validation parameters, such as validation loss, for each region
 # (or state, depends on chosen level parameters) is saved to two files, which are then used to generate predictions in the generate_predictions.py -file.
@@ -473,4 +561,5 @@ def generate_validation_files():
 # Once the parameter validation set is created, it is passed to the ’Estimation Phase’ which in turn generates the predicted data file." in the linked
 # master's thesis.
 if __name__ == '__main__':
+    args = create_parser()
     generate_validation_files()

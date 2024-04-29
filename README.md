@@ -33,9 +33,6 @@ In addition to forecasting the numbers of confirmed cases and deaths, the SuEIR+
 Illustration of the SuEIR++ model.
 </p>
 
-## Projection results
-We include all history projections (confirmed cases, deaths, and hospitalizations) in the folder ```projection_result/```, which are updated on a weekly basis. We also visualize our forecasts at county, state, and nation levels in our website [covid19.uclaml.org](https://covid19.uclaml.org/).
-
 
 
 

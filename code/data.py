@@ -7,6 +7,7 @@ import os
 # In case this is the first import, needs to be set here.
 os.environ['DC_STATEHOOD'] = '1'
 import us
+import prediction_data as pdata
 
 from convert_JHU import get_JHU
 
@@ -30,9 +31,16 @@ class Data(object):
         warnings.warn('Data get method does not implement')
         raise NotImplementedError
 
+# An alternative way to implement own datasets:
+# When implementing your own datasets, uncomment the class below and copy paste as many as you need.
+# Every class is its own dataset. The type of functions required depend on the format of the dataset,
+# but to work nicely the date_range- and get-functions have to be implemented like the ready datasets
+# below. The dataset can include either US county, US-state or country data. CSV-files would be the
+# easiest way, by including them into the data folder, as done with the ready datasets (NYtimes etc).
+
 '''
 Inherit the Data Object:
-class xxx(Data):
+class OWN_DATASET(Data):
     def __init__(self):
         pass
     def data_range(self, start_date, end_date):
@@ -40,7 +48,7 @@ class xxx(Data):
     def get(self, start_date, end_date):
         pass
 '''
-
+    
 class NYTimes(Data):
     """! Class for NYTimes dataset, inherits the Data base class. Data in the dataset is available 
     in two levels, states and counties. Dataset is specifically USA only.
@@ -268,7 +276,105 @@ class HospitalUs(Data):
         masked = self.table[mask].sort_values(by='date')
         return masked['hospitalizedCurrently'].to_numpy(), masked['inIcuCurrently'].to_numpy()
 
+# The DATASET_template uses a filepath supplied as an argument when launching the validation/generation files.
+# If a new dataset is wanted to be implemented as an csv, the template should be able to create useful training data,
+# if it includes confirmed cases, deaths (and recovery amounts if wanted).
+# The names for these columns may be slightly different in different dataset.csv-files, so they can be changed in either
+# the csv-files or by changing the hard coded column names in the prediction_data.py-file.
+
+class DATASET_template(Data):
+    """! Class for a custom dataset, inherits the Data base class. Data in the dataset is available 
+    in three levels, nations, states and counties.
+    """
+    def __init__(self, filepath, columns, level):
+        """! Custom dataset class initializer. Creates the used pandas dataframes.
+        @param filepath The filepath of the custom dataset as given by the user.
+        @columns Names of the columns in a list, so different names can be used. Hard-coded in prediction_data.py.
+        @param level The level of data, either 'nation', 'states' or 'counties'.
+        """
+        self.level = level
+        self.table = pd.read_csv(filepath)
+        self.column_names = columns
+
+        if level == "states" or level == "counties":
+            self.state_list = self.table[self.column_names[2]].unique()
+        
+    def date_range(self, state = None, county = None, country = None):
+        """! Get the first and last dates of available data in the dataset.
+        @param state  Name of the state for which range is being looked up.
+        @param county  Name of the county for which range is being looked up.
+        @param country  Name of the country for which range is being looked up.
+        @return  Tuple of strings, first date and last date, in format 'yyyy-mm-dd'.
+        """
+        if self.level == 'states':
+            state_table = self.table[self.table['state']
+                            == us.states.lookup(state).name]
+            tab = state_table
+        elif self.level == 'counties':
+            state_table = self.table[self.table['state']
+                            == us.states.lookup(state).name]
+            tab = state_table[state_table['county'] == county]
+        else:
+            tab = self.table[self.table[self.column_names[1]] == country]
+        tab = tab.sort_values(by='date')
+        date = tab['date'].unique()
+        return date[0], date[-1]
+    
+    def get(self, start_date, end_date, state = None, county = None, country = None):
+        """! Get data from the dataset from a specific timeframe.
+        @param start_date  The start date of the wanted timeframe, 'yyyy-mm-dd'
+        @param end_date  The end date of the wanted timeframe, 'yyyy-mm-dd'
+        @param state  Name of the state data is wanted from
+        @param county  Name of the county data is wanted from
+        @param country  Name of the country data is wanted from
+        @return  Tuple of arrays, arrays contain numbers of cases and deaths (and possibly recoveries, which are not used?) respectively.
+        """
+        if self.level == 'states':
+            state_table = self.table[self.table[self.column_names[2]]
+                            == us.states.lookup(state).name]
+            tab = state_table
+
+        elif self.level == 'counties':
+            state_table = self.table[self.table[self.column_names[2]]
+                            == us.states.lookup(state).name]
+            
+            tab = state_table[state_table[self.column_names[3]] == county]
+        else:
+            tab = self.table[self.table[self.column_names[1]] == country]
+
+        date = pd.to_datetime(tab[self.column_names[0]])
+        start = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+        end = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+        mask = (date >= start) & (date <= end)
+
+        if self.column_names[6] in tab:
+            return tab[mask][self.column_names[4]].to_numpy(), tab[mask][self.column_names[5]].to_numpy(), tab[mask][self.column_names[6]].to_numpy()
+        else:
+            return tab[mask][self.column_names[4]].to_numpy(), tab[mask][self.column_names[5]].to_numpy()
+
 if __name__ == '__main__':
-    data = HospitalUs('california')
-    a, b = data.get('2020-04-01', '2020-04-02')
+
+    data = DATASET_template('data/custom2.csv', pdata.custom_dataset_columns, level = 'states')
+    a,b  = data.get('2020-03-30', '2020-07-20', state = "Kentucky")
+    print(len(a))
+    print(len(b))
+
+    data = DATASET_template('data/custom_dataset.csv', pdata.custom_dataset_columns, level = 'states')
+    a,b  = data.get('2020-03-30', '2020-07-20', state = "Kentucky")
+    print(len(a))
+    print(len(b))
+
+    data = DATASET_template('data/custom_dataset.csv', pdata.custom_dataset_columns, level = 'nation')
+    a,b  = data.get('2020-07-20', '2021-07-07', country = "Brazil")
+    print(a)
+    print(b)
+
+    data = NYTimes(level='states')
+    a,b  = data.get('2020-04-01', '2020-04-02', state = "Kentucky")
+    print(a)
+    print(b)
+
+    #data = Hospital_US('california')
+    #a, b = data.get('2020-04-01', '2020-04-02')
+
     pass
