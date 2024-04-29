@@ -31,6 +31,7 @@ class Data(object):
         warnings.warn('Data get method does not implement')
         raise NotImplementedError
 
+# An alternative way to implement own datasets:
 # When implementing your own datasets, uncomment the class below and copy paste as many as you need.
 # Every class is its own dataset. The type of functions required depend on the format of the dataset,
 # but to work nicely the date_range- and get-functions have to be implemented like the ready datasets
@@ -299,7 +300,7 @@ class DATASET_template(Data):
             self.state_list = self.table[self.column_names[2]].unique()
         
     def date_range(self, state = None, county = None, country = None):
-        """! Get the first and last dates of available data in the dataset. If level is counties, a county should be specified.
+        """! Get the first and last dates of available data in the dataset.
         @param state  Name of the state for which range is being looked up.
         @param county  Name of the county for which range is being looked up.
         @param country  Name of the country for which range is being looked up.
@@ -353,13 +354,18 @@ class DATASET_template(Data):
 
 if __name__ == '__main__':
 
-    data = DATASET_template('data/custom_dataset1.csv', pdata.custom_dataset_columns, level = 'counties')
-    a,b  = data.get('2020-04-01', '2020-04-02', state = "California", county="Lassen")
-    print(a)
-    print(b)
+    data = DATASET_template('data/custom2.csv', pdata.custom_dataset_columns, level = 'states')
+    a,b  = data.get('2020-03-30', '2020-07-20', state = "Kentucky")
+    print(len(a))
+    print(len(b))
 
-    data = DATASET_template('data/custom_dataset1.csv', pdata.custom_dataset_columns, level = 'states')
-    a,b  = data.get('2020-04-01', '2020-04-02', state = "Kentucky")
+    data = DATASET_template('data/custom_dataset.csv', pdata.custom_dataset_columns, level = 'states')
+    a,b  = data.get('2020-03-30', '2020-07-20', state = "Kentucky")
+    print(len(a))
+    print(len(b))
+
+    data = DATASET_template('data/custom_dataset.csv', pdata.custom_dataset_columns, level = 'nation')
+    a,b  = data.get('2020-07-20', '2021-07-07', country = "Brazil")
     print(a)
     print(b)
 

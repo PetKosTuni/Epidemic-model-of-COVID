@@ -142,7 +142,7 @@ def generate_training_parameters(region, data, NE0_region):
 
         # Get start and middle dates for the state.
         if args.START_DATE == "default":
-            start_date = get_start_date(data.get("2020-03-22", args.END_DATE, state),100)
+            start_date = get_start_date(data.get("2020-03-22", args.END_DATE, state = state), 100)
         else:
             start_date = args.START_DATE
         mid_dates = pdata.mid_dates_state
@@ -158,23 +158,23 @@ def generate_training_parameters(region, data, NE0_region):
             reopen_flag = False
 
         # Get data from the state for training and full result.
-        train_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, args.END_DATE, state)]
-        full_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, PRED_START_DATE, state)]
+        train_data = [data.get(start_date, second_start_date, state = state), data.get(second_start_date, args.END_DATE, state = state)]
+        full_data = [data.get(start_date, second_start_date, state = state), data.get(second_start_date, PRED_START_DATE, state = state)]
 
         # If state is in mid_dates_state list, include resurged start dates.
         if args.MID_DATE != "default" and args.RESURGE_DATE != "default":
             resurge_start_date = args.RESURGE_DATE
-            train_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, resurge_start_date, state), \
-             data.get(resurge_start_date, args.END_DATE, state)]
-            full_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, resurge_start_date, state), \
-             data.get(resurge_start_date, PRED_START_DATE, state)]
+            train_data = [data.get(start_date, second_start_date, state = state), data.get(second_start_date, resurge_start_date, state = state), \
+             data.get(resurge_start_date, args.END_DATE, state = state)]
+            full_data = [data.get(start_date, second_start_date, state = state), data.get(second_start_date, resurge_start_date, state = state), \
+             data.get(resurge_start_date, PRED_START_DATE, state = state)]
         elif state in mid_dates.keys():
             # Use resurged start date if state is in mid_dates_state_resurge list. Otherwise, use 2020-09-15.
             resurge_start_date = pdata.mid_dates_state_resurge[state] if state in pdata.mid_dates_state_resurge.keys() else "2020-09-15"
-            train_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, resurge_start_date, state), \
-             data.get(resurge_start_date, args.END_DATE, state)]
-            full_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, resurge_start_date, state), \
-             data.get(resurge_start_date, PRED_START_DATE, state)]
+            train_data = [data.get(start_date, second_start_date, state = state), data.get(second_start_date, resurge_start_date, state = state), \
+             data.get(resurge_start_date, args.END_DATE, state = state)]
+            full_data = [data.get(start_date, second_start_date, state = state), data.get(second_start_date, resurge_start_date, state = state), \
+             data.get(resurge_start_date, PRED_START_DATE, state = state)]
 
         # Use given decay and a value for the state. Otherwise, use values default values.
         if state in pdata.decay_state.keys():
@@ -186,12 +186,13 @@ def generate_training_parameters(region, data, NE0_region):
         pop_in = 1/400
     
     elif args.level == "county":
-        county, state = region.split(", ")
-        region = county + ", " + state
+        print(region)
+        county, state = region.split("_")
+        mid_dates = pdata.mid_dates_state
 
         # Get start and middle dates for the county.
         if args.START_DATE == "default":
-            start_date = get_start_date(data.get("2020-03-22", args.END_DATE, state, county))
+            start_date = get_start_date(data.get("2020-03-22", args.END_DATE, state = state, county = county))
         else:
             start_date = args.START_DATE
         
@@ -209,23 +210,23 @@ def generate_training_parameters(region, data, NE0_region):
             reopen_flag = False
 
         # Get data from the county for training and full result.
-        train_data = [data.get(start_date, second_start_date, state, county), data.get(second_start_date, args.END_DATE, state, county)]
-        full_data = [data.get(start_date, second_start_date, state, county), data.get(second_start_date, PRED_START_DATE, state, county)]
+        train_data = [data.get(start_date, second_start_date, state = state, county = county), data.get(second_start_date, args.END_DATE, state = state, county = county)]
+        full_data = [data.get(start_date, second_start_date, state = state, county = county), data.get(second_start_date, PRED_START_DATE, state = state, county = county)]
 
         # If county's state is in mid_dates_state list, include resurged start dates.
         if args.MID_DATE != "default" and args.RESURGE_DATE != "default":
             resurge_start_date = args.RESURGE_DATE
-            train_data = [data.get(start_date, second_start_date, state, county), data.get(second_start_date, resurge_start_date, state, county), \
-             data.get(resurge_start_date, args.END_DATE, state, county)]
-            full_data = [data.get(start_date, second_start_date, state, county), data.get(second_start_date, resurge_start_date, state, county), \
-             data.get(resurge_start_date, PRED_START_DATE, state, county)]
+            train_data = [data.get(start_date, second_start_date, state = state, county = county), data.get(second_start_date, resurge_start_date, state = state, county = county), \
+             data.get(resurge_start_date, args.END_DATE, state = state, county = county)]
+            full_data = [data.get(start_date, second_start_date, state = state, county = county), data.get(second_start_date, resurge_start_date, state = state, county = county), \
+             data.get(resurge_start_date, PRED_START_DATE, state = state, county = county)]
         elif state in pdata.mid_dates_state.keys():
             # Use resurged start date if state is in mid_dates_state_resurge list. Otherwise, use 2020-09-15.
             resurge_start_date = pdata.mid_dates_state_resurge[state] if state in pdata.mid_dates_state_resurge.keys() else "2020-09-15"
-            train_data = [data.get(start_date, second_start_date, state, county), data.get(second_start_date, resurge_start_date, state, county), \
-            data.get(resurge_start_date, args.END_DATE, state, county)]
-            full_data = [data.get(start_date, second_start_date, state, county), data.get(second_start_date, resurge_start_date, state, county), \
-            data.get(resurge_start_date, PRED_START_DATE, state, county)]
+            train_data = [data.get(start_date, second_start_date, state = state, county = county), data.get(second_start_date, resurge_start_date, state = state, county = county), \
+            data.get(resurge_start_date, args.END_DATE, state = state, county = county)]
+            full_data = [data.get(start_date, second_start_date, state = state, county = county), data.get(second_start_date, resurge_start_date, state = state, county = county), \
+            data.get(resurge_start_date, PRED_START_DATE, state = state, county = county)]
 
         # Use given decay and a value for the county's state. Otherwise, use values default values.
         if state in pdata.decay_state.keys():
@@ -259,8 +260,8 @@ def generate_training_parameters(region, data, NE0_region):
             start_date = args.START_DATE
         
         # Get data from the nation for training and full result.
-        train_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, args.END_DATE, nation)]
-        full_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, PRED_START_DATE, nation)]
+        train_data = [data.get(start_date, second_start_date, country = nation), data.get(second_start_date, args.END_DATE, country = nation)]
+        full_data = [data.get(start_date, second_start_date, country = nation), data.get(second_start_date, PRED_START_DATE, country = nation)]
     
         # If nation is US, use different date for some of the data.
         if nation=="US":
@@ -269,8 +270,8 @@ def generate_training_parameters(region, data, NE0_region):
             else:
                 resurge_start_date = "2020-09-15"
             
-            train_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, resurge_start_date, nation), data.get(resurge_start_date, args.END_DATE, nation)]
-            full_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, resurge_start_date, nation), data.get(resurge_start_date, PRED_START_DATE, nation)]
+            train_data = [data.get(start_date, second_start_date, country = nation), data.get(second_start_date, resurge_start_date, country = nation), data.get(resurge_start_date, args.END_DATE, country = nation)]
+            full_data = [data.get(start_date, second_start_date, country = nation), data.get(second_start_date, resurge_start_date, country = nation), data.get(resurge_start_date, PRED_START_DATE, country = nation)]
 
         # Use given decay and a value for the nation.
         a, decay = pdata.FR_nation[nation] 
@@ -331,6 +332,7 @@ def generate_training_parameters(region, data, NE0_region):
 
     print("region: ", region, " start date: ", start_date, " mid date: ", second_start_date,
         " end date: ", args.END_DATE, " Validation end date: ", args.VAL_END_DATE, "mean increase: ", mean_increase, pop_in )   
+    print(NE0_region)
     N, E_0 = NE0_region[region][0], NE0_region[region][1]
 
     new_sus = 0 if reopen_flag else 0

@@ -2,7 +2,8 @@
 custom_dataset_filepath = 'data/custom_dataset.csv'
 custom_dataset_columns = ['date', 'country', 'state', 'county', 'cases', 'deaths', 'recoveries']
 
-# Starting dates for predictions for different countries.
+# Starting dates for predictions for different countries. If looping through all nations in a custom dataset by
+# omitting the --nation parameter, reduce or add countries if needed.
 START_nation = {
     "Brazil": "2020-03-30",
     "Canada": "2020-03-28",

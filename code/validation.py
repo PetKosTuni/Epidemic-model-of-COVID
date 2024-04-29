@@ -95,7 +95,7 @@ def get_county_list(cc_limit=200, pop_limit=50000):
     for region in County_Pop.keys():
         county, state = region.split("_")
         if County_Pop[region][0]>=pop_limit and state not in non_county_list:        
-            train_data = data.get("2020-03-22", args.END_DATE, state, county)
+            train_data = data.get("2020-03-22", args.END_DATE, state = state, county = county)
             confirm, death = train_data[0], train_data[1]
             start_date = get_start_date(train_data)
             
@@ -196,38 +196,38 @@ def generate_training_parameters(region, param_dict):
         print(state)
         Pop=df_Population[df_Population['STATE']==state]["Population"].to_numpy()[0]
         if args.START_DATE == "default":
-            start_date = get_start_date(data.get("2020-03-22", args.END_DATE, state),100)
+            start_date = get_start_date(data.get("2020-03-22", args.END_DATE, state = state),100)
         else:
             start_date = args.START_DATE
 
         if args.MID_DATE != "default":
             second_start_date = args.MID_DATE
-            train_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, args.END_DATE, state)]
+            train_data = [data.get(start_date, second_start_date, state = state), data.get(second_start_date, args.END_DATE, state = state)]
             reopen_flag = False
         elif state in mid_dates.keys():
             second_start_date = mid_dates[state]
-            train_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, args.END_DATE, state)]
+            train_data = [data.get(start_date, second_start_date, state = state), data.get(second_start_date, args.END_DATE, state = state)]
             reopen_flag = True
             
         else:
             second_start_date = "2020-08-30"
-            train_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, args.END_DATE, state)]
+            train_data = [data.get(start_date, second_start_date, state = state), data.get(second_start_date, args.END_DATE, state = state)]
             reopen_flag = False
 
         if args.MID_DATE != "default" and args.RESURGE_DATE != "default":
             resurge_start_date = args.RESURGE_DATE
-            train_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, resurge_start_date, state), \
-                data.get(resurge_start_date, args.END_DATE, state)]
-            full_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, resurge_start_date, state), \
-                data.get(resurge_start_date, args.VAL_END_DATE, state)]
+            train_data = [data.get(start_date, second_start_date, state = state), data.get(second_start_date, resurge_start_date, state = state), \
+                data.get(resurge_start_date, args.END_DATE, state = state)]
+            full_data = [data.get(start_date, second_start_date, state = state), data.get(second_start_date, resurge_start_date, state = state), \
+                data.get(resurge_start_date, args.VAL_END_DATE, state = state)]
         elif state in mid_dates.keys():
             resurge_start_date = pdata.mid_dates_state_resurge[state] if state in pdata.mid_dates_state_resurge.keys() else "2020-09-15"
-            train_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, resurge_start_date, state), \
-                data.get(resurge_start_date, args.END_DATE, state)]
-            full_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, resurge_start_date, state), \
-                data.get(resurge_start_date, args.VAL_END_DATE, state)]
+            train_data = [data.get(start_date, second_start_date, state = state), data.get(second_start_date, resurge_start_date, state = state), \
+                data.get(resurge_start_date, args.END_DATE, state = state)]
+            full_data = [data.get(start_date, second_start_date, state = state), data.get(second_start_date, resurge_start_date, state = state), \
+                data.get(resurge_start_date, args.VAL_END_DATE, state = state)]
 
-        val_data = data.get(args.END_DATE, args.VAL_END_DATE, state)
+        val_data = data.get(args.END_DATE, args.VAL_END_DATE, state = state)
         if state in pdata.decay_state.keys():
             a, decay = pdata.decay_state[state][0], pdata.decay_state[state][1]
         else:
@@ -246,7 +246,7 @@ def generate_training_parameters(region, param_dict):
         County_Pop = param_dict['County_Pop']
         Pop=County_Pop[key][0]
         if args.START_DATE == "default":
-            start_date = get_start_date(data.get("2020-03-22", args.END_DATE, state, county))
+            start_date = get_start_date(data.get("2020-03-22", args.END_DATE, state = state, county = county))
         else:
             start_date = args.START_DATE
 
@@ -264,10 +264,10 @@ def generate_training_parameters(region, param_dict):
             reopen_flag = False
 
         if start_date < "2020-05-10":
-            train_data = [data.get(start_date, second_start_date, state, county), data.get(second_start_date, args.END_DATE, state, county)]
+            train_data = [data.get(start_date, second_start_date, state = state, county = county), data.get(second_start_date, args.END_DATE, state = state, county = county)]
         else:
-            train_data = [data.get(start_date, args.END_DATE, state, county)]
-        val_data = data.get(args.END_DATE, args.VAL_END_DATE, state, county)
+            train_data = [data.get(start_date, args.END_DATE, state = state, county = county)]
+        val_data = data.get(args.END_DATE, args.VAL_END_DATE, state = state, county = county)
         if state in pdata.decay_state.keys():
             a, decay = pdata.decay_state[state][0], pdata.decay_state[state][1]
         else:
@@ -278,16 +278,16 @@ def generate_training_parameters(region, param_dict):
 
         if args.MID_DATE != "default" and args.RESURGE_DATE != "default":
             resurge_start_date = args.RESURGE_DATE
-            train_data = [data.get(start_date, second_start_date, state, county), data.get(second_start_date, resurge_start_date, state, county), \
-                data.get(resurge_start_date, args.END_DATE, state, county)]
-            full_data = [data.get(start_date, second_start_date, state, county), data.get(second_start_date, resurge_start_date, state, county), \
-                data.get(resurge_start_date, args.VAL_END_DATE, state, county)]
+            train_data = [data.get(start_date, second_start_date, state = state, county = county), data.get(second_start_date, resurge_start_date, state = state, county = county), \
+                data.get(resurge_start_date, args.END_DATE, state = state, county = county)]
+            full_data = [data.get(start_date, second_start_date, state = state, county = county), data.get(second_start_date, resurge_start_date, state = state, county = county), \
+                data.get(resurge_start_date, args.VAL_END_DATE, state = state, county = county)]
         elif state in pdata.mid_dates_state.keys():
             resurge_start_date = pdata.mid_dates_state_resurge[state] if state in pdata.mid_dates_state_resurge.keys() else "2020-09-15"
-            train_data = [data.get(start_date, second_start_date, state, county), data.get(second_start_date, resurge_start_date, state, county), \
-                data.get(resurge_start_date, args.END_DATE, state, county)]
-            full_data = [data.get(start_date, second_start_date, state, county), data.get(second_start_date, resurge_start_date, state, county), \
-                data.get(resurge_start_date, args.VAL_END_DATE, state, county)]
+            train_data = [data.get(start_date, second_start_date, state = state, county = county), data.get(second_start_date, resurge_start_date, state = state, county = county), \
+                data.get(resurge_start_date, args.END_DATE, state = state, county = county)]
+            full_data = [data.get(start_date, second_start_date, state = state, county = county), data.get(second_start_date, resurge_start_date, state = state, county = county), \
+                data.get(resurge_start_date, args.VAL_END_DATE, state = state, county = county)]
 
     elif args.level == "nation":
 
@@ -316,8 +316,8 @@ def generate_training_parameters(region, param_dict):
         else:
             start_date = args.START_DATE
         
-        train_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, args.END_DATE, nation)]
-        full_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, args.END_DATE, nation)]
+        train_data = [data.get(start_date, second_start_date, country = nation), data.get(second_start_date, args.END_DATE, country = nation)]
+        full_data = [data.get(start_date, second_start_date, country = nation), data.get(second_start_date, args.END_DATE, country = nation)]
         
         if nation=="US":
             if args.RESURGE_DATE != "default":
@@ -325,12 +325,12 @@ def generate_training_parameters(region, param_dict):
             else:
                 resurge_start_date = "2020-09-15"
             
-            train_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, resurge_start_date, nation), data.get(resurge_start_date, args.END_DATE, nation)]
-            full_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, resurge_start_date, nation), data.get(resurge_start_date, args.END_DATE, nation)]
+            train_data = [data.get(start_date, second_start_date, country = nation), data.get(second_start_date, resurge_start_date, country = nation), data.get(resurge_start_date, args.END_DATE, country = nation)]
+            full_data = [data.get(start_date, second_start_date, country = nation), data.get(second_start_date, resurge_start_date, country = nation), data.get(resurge_start_date, args.END_DATE, country = nation)]
 
         val_data = data.get(args.END_DATE, args.VAL_END_DATE, country = nation)
         a, decay = pdata.FR_nation[nation]
-
+    
     return {'a': a, 'decay': decay, 'pop_in': pop_in, 'Pop': Pop, 'state': state,
              'train_data': train_data, 'reopen_flag': reopen_flag, 'val_data': val_data,
              'full_data': full_data, 'start_date': start_date, 'second_start_date': second_start_date, 'nation': nation}
@@ -484,8 +484,8 @@ def generate_validation_results(parameters, all_validation_results, region):
                     bias = 0.02
             if args.bias > 0:
                 bias = args.bias
+                
             data_confirm, data_fatality = train_data[0][0], train_data[0][1]
-
             model, params_all, loss_all, val_loss, init, beta, gamma, sigma, mu = train_model(N, E_0, data_confirm[0], data_fatality[0], parameters['a'], parameters['decay'], bias, train_data, new_sus, pop_in, val_data)
 
             # using the model to forecast the fatality and confirmed cases in the next 100 days, 
