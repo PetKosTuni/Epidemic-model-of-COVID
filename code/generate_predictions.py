@@ -239,8 +239,8 @@ def generate_training_parameters(region, data, NE0_region):
         
     elif args.level == "nation":
         nation = str(region)
-        
-        mid_dates = pdata.mid_dates_state
+
+        mid_dates = pdata.mid_dates_nation
 
         # Get start and middle dates for the nation.
         if args.MID_DATE != "default":
