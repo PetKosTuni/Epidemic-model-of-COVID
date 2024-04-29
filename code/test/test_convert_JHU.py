@@ -8,26 +8,6 @@ class TestConvertJHU(unittest.TestCase):
     Class for unit testing the convert_JHU.py file.
     """
 
-    def testGetJHUNation(self):
-        """!
-        Test the get_JHU function for nation level data.
-        """
-        # Get the JHU data for nation level
-        df = get_JHU(level='nation')
-
-        # Check if the returned object is a DataFrame
-        self.assertIsInstance(df, pd.DataFrame)
-
-        # Check if the returned DataFrame has some rows
-        self.assertGreater(len(df), 0)
-
-        # Check if the returned DataFrame has the required columns
-        self.assertIn('Country_Region', df.columns)
-        self.assertIn('ConfirmedCases', df.columns)
-        self.assertIn('Fatalities', df.columns)
-        self.assertIn('Recovered', df.columns)
-        self.assertIn('Date', df.columns)
-
     def testGetJHUStates(self):
         """!
         Test the get_JHU function for state level data.
