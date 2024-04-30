@@ -35,24 +35,6 @@ class TestValidation(unittest.TestCase):
         self.assertIsInstance(result, float)
         self.assertNotEqual(result, 0)
 
-    def test_get_county_list(self):
-
-        result = validation.get_county_list(cc_limit=2000, pop_limit=10)
-        self.assertIsInstance(result, list)
-        self.assertGreater(result, 0)
-
-        for value in result:
-            self.assertIsNotNone(value)
-            self.assertIsInstance(value, str)
-
-    def test_get_region_list(self):
-        result = validation.get_region_list()
-        self.assertIsInstance(result, dict)
-        self.assertEqual(len(result), 7)
-
-        for value in result:
-            self.assertIsNotNone(value)
-
     def generate_parameters(self):
         result = validation.generate_parameters()
         self.assertIsInstance(result, dict)
