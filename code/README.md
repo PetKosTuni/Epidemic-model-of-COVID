@@ -63,6 +63,12 @@ Step 2: Run '''reichlab_csv.py''' using the same END_DATE and VAL_END_DATE to ge
 python reichlab_csv.py --END_DATE 2021-07-07 --VAL_END_DATE 2021-07-14
 ```
 ### Arguments:
+*```START_DATE```: start date for training data
+
+*```MID_DATE```: end date for first training period
+
+*```RESURGE_DATE```: date used for US regions
+
 *```END_DATE```: end date for training data
 
 *```VAL_END_DATE```: end date for validation data
@@ -73,7 +79,19 @@ python reichlab_csv.py --END_DATE 2021-07-07 --VAL_END_DATE 2021-07-14
 
 *```nation```: validation/prediction for one specific country (```level``` should be set as nation), default: 26 countries in the world
 
+*```county```: validation/prediction for one specific county (```level``` should be set as state), default: all counties in the US
+
 *```dataset```: select which data source to use (can be NYtimes and JHU), default: NYtimes data
 
+*```dataset_filepath```: select filepath for custom dataset
+
+*```popin```: the amount of people joining the susceptible population
+
+*```bias```: the bias of the learning model
+
+*```pred_range```: range for prediction in days (default: 100 days)
+
+For more detail, see the tutorial.
+
 ### Notice:
-We consider two-stage training (sequentially training over two periods of data, determined by the ```mid_date``` variable determined in the code) for validation and generating predictions. Additionlly, the end date of training data ```END_DATE``` should guarantee that the length of the second period of data should be greater than 21, i.e., the length between ```mid_date``` and ```END_DATE``` should be greater than 21. For example, currently the ```mid_date``` for CA is 2020-06-07, then the ```END_DATE``` should be set at least after 2021-01-28.
+We consider two-stage training (sequentially training over two periods of data, determined by the ```mid_date``` variable determined in the code) for validation and generating predictions. Additionlly, the end date of training data ```END_DATE``` should guarantee that the length of the second period of data should be greater than 21, i.e., the length between ```mid_date``` and ```END_DATE``` should be greater than 21 days. For example, currently the ```mid_date``` for CA is 2020-06-07, then the ```END_DATE``` should be set at least after 2020-06-28.
