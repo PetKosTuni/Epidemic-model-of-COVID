@@ -16,43 +16,47 @@ from matplotlib import pyplot as plt
 
 # Import hard coded dates, decays and "a" values.
 import prediction_data as pdata
+def create_parser():
+    parser = argparse.ArgumentParser(description='validation of prediction performance for all states')
+    parser.add_argument('--START_DATE', default = "default",
+                        help='start date for training models')
+    parser.add_argument('--MID_DATE', default = "default",
+                        help='mid date for training models')
+    parser.add_argument('--RESURGE_DATE', default = "default",
+                        help='resurge date for training models for US regions')
+    parser.add_argument('--END_DATE', default = "default",
+                        help='end date for training models')
+    parser.add_argument('--VAL_END_DATE', default = "default",
+                        help='end date for training models')
+    parser.add_argument('--level', default = "state",
+                        help='state, nation or county')
+    parser.add_argument('--state', default = "default",
+                        help='state')
+    parser.add_argument('--nation', default = "default",
+                        help='nation')
+    parser.add_argument('--county', default = "default",
+                        help='county')
+    parser.add_argument('--dataset', default = "NYtimes",
+                        help='nytimes')
+    parser.add_argument('--dataset_filepath', default = "default",
+                            help='the filepath of the custom dataset: data/...')
+    parser.add_argument('--popin', type=float, default = 0,
+                        help='popin')
+    parser.add_argument('--bias', type=float, default = 0,
+                        help='bias')
+    parser.add_argument('--pred_range', type=int, default = 100,
+                        help='range for prediction in days')
+    args = parser.parse_args()
+    
 
-parser = argparse.ArgumentParser(description='validation of prediction performance for all states')
-parser.add_argument('--START_DATE', default = "default",
-                    help='start date for training models')
-parser.add_argument('--MID_DATE', default = "default",
-                    help='mid date for training models')
-parser.add_argument('--RESURGE_DATE', default = "default",
-                    help='resurge date for training models for US regions')
-parser.add_argument('--END_DATE', default = "default",
-                    help='end date for training models')
-parser.add_argument('--VAL_END_DATE', default = "default",
-                    help='end date for training models')
-parser.add_argument('--level', default = "state",
-                    help='state, nation or county')
-parser.add_argument('--state', default = "default",
-                    help='state')
-parser.add_argument('--nation', default = "default",
-                    help='nation')
-parser.add_argument('--county', default = "default",
-                    help='county')
-parser.add_argument('--dataset', default = "NYtimes",
-                    help='nytimes')
-parser.add_argument('--dataset_filepath', default = "default",
-                        help='the filepath of the custom dataset: data/...')
-parser.add_argument('--popin', type=float, default = 0,
-                    help='popin')
-parser.add_argument('--bias', type=float, default = 0,
-                    help='bias')
-parser.add_argument('--pred_range', type=int, default = 100,
-                    help='range for prediction in days')
-args = parser.parse_args()
-PRED_START_DATE = args.VAL_END_DATE
+    
+    return args
 
-print(args)
 
-def read_validation_files():
+
+def read_validation_files(args):
     """! The function initializes the wanted datasets and directories based on the arguments given and the validation results
+    @param args The parsed arguments
     @return Returns the dataset, directory name, validation results, the range of predictions in days and a list of regions
     """
 
@@ -126,11 +130,12 @@ def read_validation_files():
 
     return data, pred_dir, NE0_region, prediction_range, region_list
 
-def generate_training_parameters(region, data, NE0_region):
+def generate_training_parameters(region, data, NE0_region, args):
     """! The function creates generates the training parameters needed for training the model.
     @param region The current region (nation/state/country).
     @param data The used dataset.
     @param NE0_region The validation results from validation.py.
+    @param args The parsed arguments
     @return The training parameters N, E_0, data_confirm, data_fatality, a, decay, bias, train_data, new_sus, pop_in, full_data (and the current county and state)
     """
     
@@ -159,7 +164,7 @@ def generate_training_parameters(region, data, NE0_region):
 
         # Get data from the state for training and full result.
         train_data = [data.get(start_date, second_start_date, state = state), data.get(second_start_date, args.END_DATE, state = state)]
-        full_data = [data.get(start_date, second_start_date, state = state), data.get(second_start_date, PRED_START_DATE, state = state)]
+        full_data = [data.get(start_date, second_start_date, state = state), data.get(second_start_date, args.VAL_END_DATE, state = state)]
 
         # If state is in mid_dates_state list, include resurged start dates.
         if args.MID_DATE != "default" and args.RESURGE_DATE != "default":
@@ -167,14 +172,14 @@ def generate_training_parameters(region, data, NE0_region):
             train_data = [data.get(start_date, second_start_date, state = state), data.get(second_start_date, resurge_start_date, state = state), \
              data.get(resurge_start_date, args.END_DATE, state = state)]
             full_data = [data.get(start_date, second_start_date, state = state), data.get(second_start_date, resurge_start_date, state = state), \
-             data.get(resurge_start_date, PRED_START_DATE, state = state)]
+             data.get(resurge_start_date, args.VAL_END_DATE, state = state)]
         elif state in mid_dates.keys():
             # Use resurged start date if state is in mid_dates_state_resurge list. Otherwise, use 2020-09-15.
             resurge_start_date = pdata.mid_dates_state_resurge[state] if state in pdata.mid_dates_state_resurge.keys() else "2020-09-15"
             train_data = [data.get(start_date, second_start_date, state = state), data.get(second_start_date, resurge_start_date, state = state), \
              data.get(resurge_start_date, args.END_DATE, state = state)]
             full_data = [data.get(start_date, second_start_date, state = state), data.get(second_start_date, resurge_start_date, state = state), \
-             data.get(resurge_start_date, PRED_START_DATE, state = state)]
+             data.get(resurge_start_date, args.VAL_END_DATE, state = state)]
 
         # Use given decay and a value for the state. Otherwise, use values default values.
         if state in pdata.decay_state.keys():
@@ -211,7 +216,7 @@ def generate_training_parameters(region, data, NE0_region):
 
         # Get data from the county for training and full result.
         train_data = [data.get(start_date, second_start_date, state = state, county = county), data.get(second_start_date, args.END_DATE, state = state, county = county)]
-        full_data = [data.get(start_date, second_start_date, state = state, county = county), data.get(second_start_date, PRED_START_DATE, state = state, county = county)]
+        full_data = [data.get(start_date, second_start_date, state = state, county = county), data.get(second_start_date, args.VAL_END_DATE, state = state, county = county)]
 
         # If county's state is in mid_dates_state list, include resurged start dates.
         if args.MID_DATE != "default" and args.RESURGE_DATE != "default":
@@ -219,14 +224,14 @@ def generate_training_parameters(region, data, NE0_region):
             train_data = [data.get(start_date, second_start_date, state = state, county = county), data.get(second_start_date, resurge_start_date, state = state, county = county), \
              data.get(resurge_start_date, args.END_DATE, state = state, county = county)]
             full_data = [data.get(start_date, second_start_date, state = state, county = county), data.get(second_start_date, resurge_start_date, state = state, county = county), \
-             data.get(resurge_start_date, PRED_START_DATE, state = state, county = county)]
+             data.get(resurge_start_date, args.VAL_END_DATE, state = state, county = county)]
         elif state in pdata.mid_dates_state.keys():
             # Use resurged start date if state is in mid_dates_state_resurge list. Otherwise, use 2020-09-15.
             resurge_start_date = pdata.mid_dates_state_resurge[state] if state in pdata.mid_dates_state_resurge.keys() else "2020-09-15"
             train_data = [data.get(start_date, second_start_date, state = state, county = county), data.get(second_start_date, resurge_start_date, state = state, county = county), \
             data.get(resurge_start_date, args.END_DATE, state = state, county = county)]
             full_data = [data.get(start_date, second_start_date, state = state, county = county), data.get(second_start_date, resurge_start_date, state = state, county = county), \
-            data.get(resurge_start_date, PRED_START_DATE, state = state, county = county)]
+            data.get(resurge_start_date, args.VAL_END_DATE, state = state, county = county)]
 
         # Use given decay and a value for the county's state. Otherwise, use values default values.
         if state in pdata.decay_state.keys():
@@ -263,7 +268,7 @@ def generate_training_parameters(region, data, NE0_region):
         
         # Get data from the nation for training and full result.
         train_data = [data.get(start_date, second_start_date, country = nation), data.get(second_start_date, args.END_DATE, country = nation)]
-        full_data = [data.get(start_date, second_start_date, country = nation), data.get(second_start_date, PRED_START_DATE, country = nation)]
+        full_data = [data.get(start_date, second_start_date, country = nation), data.get(second_start_date, args.VAL_END_DATE, country = nation)]
     
         # If nation is US, use different date for some of the data.
         if nation=="US":
@@ -273,7 +278,7 @@ def generate_training_parameters(region, data, NE0_region):
                 resurge_start_date = "2020-09-15"
             
             train_data = [data.get(start_date, second_start_date, country = nation), data.get(second_start_date, resurge_start_date, country = nation), data.get(resurge_start_date, args.END_DATE, country = nation)]
-            full_data = [data.get(start_date, second_start_date, country = nation), data.get(second_start_date, resurge_start_date, country = nation), data.get(resurge_start_date, PRED_START_DATE, country = nation)]
+            full_data = [data.get(start_date, second_start_date, country = nation), data.get(second_start_date, resurge_start_date, country = nation), data.get(resurge_start_date, args.VAL_END_DATE, country = nation)]
 
         # Use given decay and a value for the nation.
         a, decay = pdata.FR_nation[nation] 
@@ -402,13 +407,14 @@ def train_model(N, E_0, I_0, R_0, a, decay, bias, train_data, new_sus, pop_in, N
 
     return model, init, params_all, loss_all, loss_true, pred_true, confirm
 
-def plot_results(confirm, region, loss_all, loss_true, pred_true):
+def plot_results(confirm, region, loss_all, loss_true, pred_true, args):
     """! The function plots and prints information about the predictions.
     @param confirm List of confirmed cases
     @param region The region/state/county being validated.
     @param loss_all List of training loss gained by training the model.
     @param loss_true True loss.
     @param pred_true True prediction.
+    @param args The parsed arguments
     """
     # Plot results.
     plt.figure()
@@ -423,7 +429,7 @@ def plot_results(confirm, region, loss_all, loss_true, pred_true):
     print ("region: ", region, " training loss: ",  \
         loss_all, loss_true," maximum death cases: ", int(pred_true[1][-1]), " maximum confirmed cases: ", int(pred_true[0][-1])) 
 
-def generate_prediction_frames(params_all, model, init, full_data, new_sus, prediction_range, pop_in, train_data, loss_true, pred_true, region, county, state, frames):
+def generate_prediction_frames(params_all, model, init, full_data, new_sus, prediction_range, pop_in, train_data, loss_true, pred_true, region, county, state, frames, args):
     """! The function creates DataFrames for prediction data, which are then later used to write the data into csv-form.
     @param params_all Parameters gained by training the model.
     @param model The SUEIR model used to calculate predictions.
@@ -439,8 +445,10 @@ def generate_prediction_frames(params_all, model, init, full_data, new_sus, pred
     @param county Current county (if level == "counties").
     @param state Current state (if level == "counties"/"states").
     @param frames the list to be filled with prediction data.
+    @param args The parsed arguments
     @return The modified dataframes list, filled with prediction data.
     """
+    
 
     # Add predictions to a list.
     prediction_list = []
@@ -526,7 +534,7 @@ def generate_prediction_frames(params_all, model, init, full_data, new_sus, pred
     diffmI = np.percentile(diffI,50,axis=0)
 
     # Generate list of prediction dates starting from prediction start date. 
-    dates = [pd.to_datetime(PRED_START_DATE)+ timedelta(days=i) \
+    dates = [pd.to_datetime(args.VAL_END_DATE)+ timedelta(days=i) \
             for i in range(prediction_range)]
     
     # Combine prediction results into NumPy array and transpose it.
@@ -551,32 +559,35 @@ def generate_prediction_frames(params_all, model, init, full_data, new_sus, pred
     pred_data=pred_data.reset_index().rename(columns={"index": "Date"})
 
     # Add the prediction data to the frame list.
-    frames.append(pred_data[pred_data['Date']>=datetime.strptime(PRED_START_DATE,"%Y-%m-%d")])
+    frames.append(pred_data[pred_data['Date']>=datetime.strptime(args.VAL_END_DATE,"%Y-%m-%d")])
 
     return frames
 
-def generate_prediction_files():
+def generate_prediction_files(args):
     """! The function creates the prediction results for each wanted region, state or county, and saves them in a csv file.
+    @param args The parsed arguments
     """
     
     frames = []
-    data, pred_dir, NE0_region, prediction_range, region_list = read_validation_files()
+    data, pred_dir, NE0_region, prediction_range, region_list = read_validation_files(args)
     
     # Go through selected regions.
     for region in region_list:
-        N, E_0, I_0, R_0, a, decay, bias, train_data, new_sus, pop_in, full_data, county, state = generate_training_parameters(region, data, NE0_region)
+        N, E_0, I_0, R_0, a, decay, bias, train_data, new_sus, pop_in, full_data, county, state = generate_training_parameters(region, data, NE0_region, args)
         model, init, params_all, loss_all, loss_true, pred_true, confirm = train_model(N, E_0, I_0[0], R_0[0], a, decay, bias, train_data, new_sus, pop_in, NE0_region, region, full_data, prediction_range)
-        plot_results(confirm, region, loss_all, loss_true, pred_true)
-        frames = generate_prediction_frames(params_all, model, init, full_data, new_sus, prediction_range, pop_in, train_data, loss_true, pred_true, region, county, state, frames)
+        plot_results(confirm, region, loss_all, loss_true, pred_true, args)
+        frames = generate_prediction_frames(params_all, model, init, full_data, new_sus, prediction_range, pop_in, train_data, loss_true, pred_true, region, county, state, frames, args)
 
     # Combine all dataframes from frame list to a single DataFrame.
     result = pd.concat(frames)
 
     # Create filename for result CSV.
-    save_name = pred_dir + "pred_" + args.level + "_END_DATE_" + args.END_DATE + "_PRED_START_DATE_" + PRED_START_DATE + ".csv"
+    save_name = pred_dir + "pred_" + args.level + "_END_DATE_" + args.END_DATE + "_PRED_START_DATE_" + args.VAL_END_DATE + ".csv"
 
     # Convert result DataFrame to CSV file.
     result.to_csv(save_name, index=False)
 
 if __name__ == '__main__':
-    generate_prediction_files()
+    args = create_parser()
+    print(args)
+    generate_prediction_files(args)
