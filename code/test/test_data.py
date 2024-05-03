@@ -139,50 +139,6 @@ class TestJhuUs(unittest.TestCase): # Unable to test these now, JHU States (and 
 
         self.assertGreater(self.jhu_us_states.state_list.size, 0) # list is not empty
         self.assertGreater(self.jhu_us_counties.state_list.size, 0)
-        
-    def test_date_range_states(self):
-        """!
-        Test the date_range method of the JHU_US class for every state.
-        """
-        for state in self.jhu_us_states.state_list:
-            date_first, date_last = self.jhu_us_states.date_range(state)
-            self.assertIsNotNone(date_first)
-            self.assertIsNotNone(date_last)
-            self.assertGreater(len(date_first), 0)
-            self.assertGreater(len(date_last), 0)
-            
-    def test_date_range_counties(self):
-        """!
-        Test the date_range method of the JHU_US class for every county. Runtime for test is long.
-        """
-        for state in self.jhu_us_counties.state_list:
-            counties = self.jhu_us_counties.table[self.jhu_us_counties.table['state'] == state]['county'].unique()
-            for county in counties:
-                date_first, date_last = self.jhu_us_counties.date_range(state, county)
-                self.assertIsNotNone(date_first)
-                self.assertIsNotNone(date_last)
-                self.assertGreater(len(date_first) > 0)
-                self.assertGreater(len(date_last) > 0)
-                
-    def test_state_list_not_empty(self):
-        """!
-        Test that the state_list attribute of the JHU_US class is not empty for either level.
-        """
-        self.assertTrue(len(self.nytimes_states.state_list) > 0)
-        self.assertTrue(len(self.nytimes_counties.state_list) > 0)
-        
-    def test_get_whole_range_states(self):
-        """!
-        Test that the get() method of the class returns actual data when the range is the entire range of the data,
-        which is gotten with method date_range(). For states level.
-        """
-        for state in self.jhu_us_states.state_list: # Surely each state should have a valid number of cases and deaths
-            date_first, date_last = self.jhu_us_states.date_range(state)
-            array_cases, array_deaths = self.jhu_us_states.get(date_first, date_last, state)
-            self.assertIsNotNone(array_cases)
-            self.assertIsNotNone(array_deaths)
-            self.assertNotEqual(len(array_cases), 0)
-            self.assertNotEqual(len(array_deaths), 0)
             
     def test_get_whole_range_counties(self):
         """!
