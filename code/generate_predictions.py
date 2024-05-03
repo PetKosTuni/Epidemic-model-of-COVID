@@ -102,7 +102,7 @@ def read_validation_files(args):
         # Create object for nations with data from JHU (or own dataset).
 
         if args.dataset == "CUSTOM_DATASET":
-           data = DATASET_template(args.dataset_filepath, pdata.custom_dataset_columns, level = 'nation')
+            data = DATASET_template(args.dataset_filepath, pdata.custom_dataset_columns, level = 'nation')
         else:
             data = JHU_global()
 
@@ -113,6 +113,7 @@ def read_validation_files(args):
         # If data for certain nation(s) is queried.
         if args.nation != "default":
             val_dir = "val_results_world/test"
+
 
     # Give path/name to validation file.
     json_file_name = val_dir + args.dataset + "_" + "val_params_best_END_DATE_" + args.END_DATE + "_VAL_END_DATE_" + args.VAL_END_DATE
