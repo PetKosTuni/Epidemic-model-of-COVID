@@ -282,7 +282,7 @@ def generate_training_parameters(region, data, NE0_region, args):
 
         # Use given decay and a value for the nation.
         a, decay = pdata.FR_nation[nation] 
-        pop_in = 1/400 if nation == "US" else 1/400
+        pop_in = 1/400
 
     # determine the parameters including pop_in, N and E_0
     mean_increase = 0
@@ -342,7 +342,7 @@ def generate_training_parameters(region, data, NE0_region, args):
     print(NE0_region)
     N, E_0 = NE0_region[region][0], NE0_region[region][1]
 
-    new_sus = 0 if reopen_flag else 0
+    new_sus = 0
     if args.level == "state" or args.level == "county":
         # Use 0.025 as bias if state is one listed or if the state or county is included in middle dates list. 
         bias = 0.025 if reopen_flag or (state=="Louisiana" or state=="Washington" or state == "North Carolina" or state == "Mississippi") else 0.005
@@ -429,7 +429,7 @@ def plot_results(confirm, region, loss_all, loss_true, pred_true, args):
     print ("region: ", region, " training loss: ",  \
         loss_all, loss_true," maximum death cases: ", int(pred_true[1][-1]), " maximum confirmed cases: ", int(pred_true[0][-1])) 
 
-def generate_prediction_frames(params_all, model, init, full_data, new_sus, prediction_range, pop_in, train_data, loss_true, pred_true, region, county, state, frames, args):
+def generate_prediction_frames(params_all, model, init, full_data, new_sus, prediction_range, pop_in, train_data, pred_true, region, county, state, frames, args):
     """! The function creates DataFrames for prediction data, which are then later used to write the data into csv-form.
     @param params_all Parameters gained by training the model.
     @param model The SUEIR model used to calculate predictions.
@@ -576,7 +576,7 @@ def generate_prediction_files(args):
         N, E_0, I_0, R_0, a, decay, bias, train_data, new_sus, pop_in, full_data, county, state = generate_training_parameters(region, data, NE0_region, args)
         model, init, params_all, loss_all, loss_true, pred_true, confirm = train_model(N, E_0, I_0[0], R_0[0], a, decay, bias, train_data, new_sus, pop_in, NE0_region, region, full_data, prediction_range)
         plot_results(confirm, region, loss_all, loss_true, pred_true, args)
-        frames = generate_prediction_frames(params_all, model, init, full_data, new_sus, prediction_range, pop_in, train_data, loss_true, pred_true, region, county, state, frames, args)
+        frames = generate_prediction_frames(params_all, model, init, full_data, new_sus, prediction_range, pop_in, train_data, pred_true, region, county, state, frames, args)
 
     # Combine all dataframes from frame list to a single DataFrame.
     result = pd.concat(frames)

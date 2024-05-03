@@ -473,7 +473,7 @@ def generate_validation_results(parameters, all_validation_results, region):
             E_0 = N/r
 
             # In order to simulate the reopen, we assume at the second stage, there are N new suspectible individuals
-            new_sus = 0 if reopen_flag else 0
+            new_sus = 0
             if args.level == "state" or args.level == "county":
                 bias = 0.025 if reopen_flag or (state=="Louisiana" or state=="Washington" or state == "North Carolina" or state == "Mississippi") else 0.005
                 if state == "Arizona" or state == "Alabama" or state == "Florida" or state=="Indiana" or state=="Wisconsin" or state == "Hawaii" or state == "California" or state=="Texas" or state=="Illinois":
