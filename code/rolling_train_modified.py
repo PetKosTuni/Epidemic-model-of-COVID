@@ -59,8 +59,8 @@ def train(model, init, prev_params, train_data, reg=0, lag=0):
 
         # Use both daily cases and cumulative cases to construct the loss function
         return loss(pred_confirm, data_confirm) + 1*loss(pred_fatality, data_fatality) 
-        + 1*loss(pred_ave_confirm_perday, target_ave_confirm_perday) + 3 * \
-            loss(pred_ave_fatality_perday, target_ave_fatality_perday) 
+        """+ 1*loss(pred_ave_confirm_perday, target_ave_confirm_perday) + 3 * \
+            loss(pred_ave_fatality_perday, target_ave_fatality_perday)""" 
 
     # scipy optimizer
     optimal = minimize(

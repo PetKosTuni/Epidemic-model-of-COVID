@@ -62,7 +62,7 @@ class TestGeneratePredictions(unittest.TestCase):
         generate_predictions.plot_results(self.confirm, self.region, self.loss_all, self.loss_true, self.pred_true, self.args)
 
     def test_generate_prediction_frames(self):
-        result = generate_predictions.generate_prediction_frames(self.params_all, self.model, self.init, self.full_data, self.new_sus, self.pred_range, self.pop_in, self.train_data, self.loss_true, self.pred_true, self.region, self.county, self.state, self.frames, self.args)
+        result = generate_predictions.generate_prediction_frames(self.params_all, self.model, self.init, self.full_data, self.new_sus, self.pred_range, self.pop_in, self.train_data, self.pred_true, self.region, self.county, self.state, self.frames, self.args)
 
         self.assertIsInstance(result, list)
         self.assertNotEqual(len(result), 0)
