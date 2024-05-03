@@ -37,7 +37,7 @@ Illustration of the SuEIR++ model.
 
 
 ## Reference
-For more technical details, please refer to our [manuscript](https://www.medrxiv.org/content/10.1101/2020.05.24.20111989v1.full.pdf).
+For more technical details, please refer to the original developers' [manuscript](https://www.medrxiv.org/content/10.1101/2020.05.24.20111989v1.full.pdf).
 ```
 @article{zou2020epidemic,
   title={Epidemic Model Guided Machine Learning for COVID-19 Forecasts in the United States},
