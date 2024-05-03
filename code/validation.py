@@ -123,6 +123,7 @@ def get_region_list():
             data = DATASET_template(args.dataset_filepath, pdata.custom_dataset_columns, level = 'states')
         else:
             data = JHU_US(level='states')
+            args.dataset = 'JHU_US'
 
         nonstate_list = ["American Samoa", "Diamond Princess", "Grand Princess", "Virgin Islands", "Northern Mariana Islands"]
         region_list = [state for state in data.state_list if state not in nonstate_list]
@@ -141,6 +142,7 @@ def get_region_list():
             data = DATASET_template(args.dataset_filepath, pdata.custom_dataset_columns, level = 'counties')
         else:
             data = JHU_US(level='counties')
+            args.dataset = 'JHU_US'
         
         mid_dates = pdata.mid_dates_county
         with open("data/county_pop.json", 'r') as f:
@@ -161,6 +163,7 @@ def get_region_list():
             data = DATASET_template(args.dataset_filepath, pdata.custom_dataset_columns, level = 'nation')
         else:
             data = JHU_global()
+            args.dataset = 'JHU_global'
 
         region_list = pdata.START_nation.keys()
         mid_dates = pdata.mid_dates_nation
