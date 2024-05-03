@@ -57,10 +57,17 @@ def train(model, init, prev_params, train_data, reg=0, lag=0):
         pred_ave_confirm_perday = np.mean(np.maximum(0, np.diff(pred_confirm)[-7:]))
         pred_ave_fatality_perday = np.mean(np.maximum(0, np.diff(pred_fatality)[-7:]))
 
+
+        """
+        Note: 
+            # We don't know if the original developers wanted to include the unreachable lines below. 
+            # The lines are unreachable to the return statement.
+        """
+
         # Use both daily cases and cumulative cases to construct the loss function
         return loss(pred_confirm, data_confirm) + 1*loss(pred_fatality, data_fatality) 
-        """+ 1*loss(pred_ave_confirm_perday, target_ave_confirm_perday) + 3 * \
-            loss(pred_ave_fatality_perday, target_ave_fatality_perday)""" 
+        + 1*loss(pred_ave_confirm_perday, target_ave_confirm_perday) + 3 * \
+            loss(pred_ave_fatality_perday, target_ave_fatality_perday)
 
     # scipy optimizer
     optimal = minimize(
